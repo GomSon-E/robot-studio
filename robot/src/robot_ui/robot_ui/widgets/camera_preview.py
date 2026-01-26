@@ -3,7 +3,7 @@ import threading
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QGridLayout,
-    QFrame, QScrollArea
+    QFrame, QPushButton, QScrollArea
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QImage, QPixmap
@@ -119,7 +119,26 @@ class CameraPreviewArea(QWidget):
             }
         """)
         header_layout.addWidget(title)
+
         header_layout.addStretch()
+
+        # 리프레시 버튼
+        self.refresh_btn = QPushButton('Refresh Topics')
+        self.refresh_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #0e639c;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #1177bb;
+            }
+        """)
+        self.refresh_btn.clicked.connect(self._refresh_topics)
+        header_layout.addWidget(self.refresh_btn)
 
         layout.addLayout(header_layout)
 
@@ -174,7 +193,7 @@ class CameraPreviewArea(QWidget):
             self.ros_thread.start()
 
             self.status_label.setText('ROS2 initialized')
-            self._discover_topics()
+            self._refresh_topics()
 
         except Exception as e:
             self.status_label.setText(f'ROS2 init failed: {e}')
@@ -183,15 +202,22 @@ class CameraPreviewArea(QWidget):
         while self._running and rclpy.ok():
             self.executor.spin_once(timeout_sec=0.1)
 
-    def _discover_topics(self):
+    def _refresh_topics(self):
         if not self.ros_node:
             return
 
         topics = self.ros_node.get_available_image_topics()
         self.status_label.setText(f'Found {len(topics)} camera(s)')
 
+        # 새 토픽 추가
         for topic in topics:
-            self._add_preview(topic)
+            if topic not in self.preview_widgets:
+                self._add_preview(topic)
+
+        # 없어진 토픽 제거
+        for topic in list(self.preview_widgets.keys()):
+            if topic not in topics:
+                self._remove_preview(topic)
 
         self._update_grid_layout()
 
@@ -202,8 +228,22 @@ class CameraPreviewArea(QWidget):
         if self.ros_node:
             self.ros_node.subscribe_to_topic(topic_name)
 
+    def _remove_preview(self, topic_name: str):
+        if topic_name in self.preview_widgets:
+            widget = self.preview_widgets.pop(topic_name)
+            self.grid_layout.removeWidget(widget)
+            widget.deleteLater()
+
+            if self.ros_node:
+                self.ros_node.unsubscribe_from_topic(topic_name)
+
     def _update_grid_layout(self):
         """프리뷰 위젯들을 그리드에 배치 (2열)"""
+        # 기존 위젯 제거
+        for i in reversed(range(self.grid_layout.count())):
+            self.grid_layout.itemAt(i).widget().setParent(None)
+
+        # 2열 그리드로 배치
         for idx, (topic, widget) in enumerate(self.preview_widgets.items()):
             row = idx // 2
             col = idx % 2
