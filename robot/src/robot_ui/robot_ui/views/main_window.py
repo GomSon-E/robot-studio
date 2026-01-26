@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout
-from ..widgets import Sidebar
+from ..widgets import Sidebar, CameraPreviewArea
 
 
 class MainWindow(QMainWindow):
@@ -30,9 +30,28 @@ class MainWindow(QMainWindow):
 
         # 1. 고정 사이드바
         self.sidebar = Sidebar()
+        self.sidebar.menu_selected.connect(self._on_menu_selected)
         main_layout.addWidget(self.sidebar)
 
-        # 2. 메인 콘텐츠 영역 (빈 영역)
-        self.main_area = QWidget()
-        self.main_area.setStyleSheet("background-color: #1e1e1e;")
-        main_layout.addWidget(self.main_area, 1)
+        # 2. 메인 콘텐츠 영역
+        self.camera_preview_area = CameraPreviewArea()
+        self.camera_preview_area.setVisible(False)
+        main_layout.addWidget(self.camera_preview_area, 1)
+
+        # 빈 메인 영역 (기본)
+        self.empty_area = QWidget()
+        self.empty_area.setStyleSheet("background-color: #1e1e1e;")
+        main_layout.addWidget(self.empty_area, 1)
+
+    def _on_menu_selected(self, menu_id: str):
+        if menu_id == 'camera_preview':
+            self.camera_preview_area.setVisible(True)
+            self.empty_area.setVisible(False)
+        else:
+            self.camera_preview_area.setVisible(False)
+            self.empty_area.setVisible(True)
+
+    def closeEvent(self, event):
+        if hasattr(self, 'camera_preview_area'):
+            self.camera_preview_area.cleanup()
+        super().closeEvent(event)
