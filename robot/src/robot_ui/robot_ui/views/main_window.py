@@ -1,7 +1,8 @@
+import asyncio
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout
 from rclpy.logging import get_logger
 from ..widgets import Sidebar, CameraPreviewArea, DatasetSettingPanel
-from ..utils import ApiClient, PresignedUrlWorker
+from ..utils import ApiClient
 
 logger = get_logger('MainWindow')
 
@@ -52,7 +53,6 @@ class MainWindow(QMainWindow):
 
         # API 클라이언트
         self.api_client = ApiClient()
-        self.url_worker = None
 
         # 빈 메인 영역 (기본)
         self.empty_area = QWidget()
@@ -88,32 +88,20 @@ class MainWindow(QMainWindow):
     def _on_dataset_submitted(self, settings: dict):
         """Dataset Setting 제출 시 presigned URL 요청"""
         logger.info(f"Dataset settings submitted: {settings}")
+        asyncio.create_task(self._fetch_presigned_urls(settings))
 
-        # 이전 워커가 있으면 정리
-        if self.url_worker and self.url_worker.isRunning():
-            self.url_worker.quit()
-            self.url_worker.wait()
-
-        # 새 워커 시작
-        self.url_worker = PresignedUrlWorker(self.api_client, settings)
-        self.url_worker.urls_received.connect(self._on_presigned_urls_received)
-        self.url_worker.error.connect(self._on_presigned_url_error)
-        self.url_worker.start()
-
-        #TODO: 로딩 표시
-
-    def _on_presigned_urls_received(self, urls: list):
-        """Presigned URL 수신 완료"""
-        logger.info(f"Received {len(urls)} presigned URLs")
-        logger.info(f"Response: {urls}")
-
-        #TODO: 로딩 표시 그만 -> 데이터 수집 페이지로 이동
-
-    def _on_presigned_url_error(self, error_msg: str):
-        """Presigned URL 요청 에러"""
-        logger.error(f"Error: {error_msg}")
-
-        #TODO: 로딩 표시 그만 -> 에러 메시지 표시 
+    async def _fetch_presigned_urls(self, settings: dict):
+        """Presigned URL 비동기 요청"""
+        try:
+            urls = await self.api_client.get_presigned_urls(
+                topic=settings['topic'],
+                episodes=settings['episodes']
+            )
+            logger.info(f"Received {len(urls)} presigned URLs")
+            logger.info(f"Response: {urls}")
+            #TODO: 데이터 수집 페이지로 이동
+        except Exception as e:
+            logger.error(f"Error: {e}")
 
     def closeEvent(self, event):
         if hasattr(self, 'camera_preview_area'):
