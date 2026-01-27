@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout
 from ..widgets import Sidebar, CameraPreviewArea, DatasetSettingPanel
+from ..utils import ApiClient, PresignedUrlWorker
 
 
 class MainWindow(QMainWindow):
@@ -43,7 +44,12 @@ class MainWindow(QMainWindow):
         # 3. 데이터셋 설정 패널
         self.dataset_setting_panel = DatasetSettingPanel()
         self.dataset_setting_panel.setVisible(False)
+        self.dataset_setting_panel.submitted.connect(self._on_dataset_submitted)
         main_layout.addWidget(self.dataset_setting_panel, 1)
+
+        # API 클라이언트
+        self.api_client = ApiClient()
+        self.url_worker = None
 
         # 빈 메인 영역 (기본)
         self.empty_area = QWidget()
@@ -75,6 +81,37 @@ class MainWindow(QMainWindow):
         # 사이드바 메뉴 상태 업데이트
         self.sidebar._items['camera_preview'].setChecked(False)
         self.sidebar._items['dataset_setting'].setChecked(True)
+
+    def _on_dataset_submitted(self, settings: dict):
+        """Dataset Setting 제출 시 presigned URL 요청"""
+        print(f"[MainWindow] Dataset settings submitted: {settings}")
+
+        # 이전 워커가 있으면 정리
+        if self.url_worker and self.url_worker.isRunning():
+            self.url_worker.quit()
+            self.url_worker.wait()
+
+        # 새 워커 시작
+        self.url_worker = PresignedUrlWorker(self.api_client, settings)
+        self.url_worker.finished.connect(self._on_presigned_urls_received)
+        self.url_worker.error.connect(self._on_presigned_url_error)
+        self.url_worker.start()
+
+        #TODO: 로딩 표시
+
+    def _on_presigned_urls_received(self, urls: list):
+        """Presigned URL 수신 완료"""
+        print(f"[MainWindow] Received {len(urls)} presigned URLs")
+        for i, url_info in enumerate(urls):
+            print(f"  Episode {i}: {url_info['url'][:50]}...")
+
+        #TODO: 로딩 표시 그만 -> 데이터 수집 페이지로 이동
+
+    def _on_presigned_url_error(self, error_msg: str):
+        """Presigned URL 요청 에러"""
+        print(f"[MainWindow] Error: {error_msg}")
+
+        #TODO: 로딩 표시 그만 -> 에러 메시지 표시 
 
     def closeEvent(self, event):
         if hasattr(self, 'camera_preview_area'):
