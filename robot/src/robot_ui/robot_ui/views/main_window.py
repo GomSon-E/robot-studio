@@ -105,12 +105,16 @@ class MainWindow(QMainWindow):
             )
             logger.info(f"Received {len(urls)} presigned URLs")
             logger.info(f"Response: {urls}")
-            self._show_data_collection()
+            self._show_data_collection(settings, urls)
         except Exception as e:
             logger.error(f"Error: {e}")
 
-    def _show_data_collection(self):
+    def _show_data_collection(self, settings: dict, presigned_urls: list):
         """데이터 수집 페이지로 이동"""
+        # ROS2 노드 공유
+        if self.camera_preview_area.ros_node:
+            self.data_collection_panel.set_ros_node(self.camera_preview_area.ros_node)
+        self.data_collection_panel.set_recording_config(settings, presigned_urls)
         self.camera_preview_area.setVisible(False)
         self.dataset_setting_panel.setVisible(False)
         self.data_collection_panel.setVisible(True)
