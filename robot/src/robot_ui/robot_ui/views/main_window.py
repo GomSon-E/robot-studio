@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout
-from ..widgets import Sidebar, CameraPreviewArea
+from ..widgets import Sidebar, CameraPreviewArea, DatasetSettingPanel
 
 
 class MainWindow(QMainWindow):
@@ -36,7 +36,13 @@ class MainWindow(QMainWindow):
         # 2. 메인 콘텐츠 영역
         self.camera_preview_area = CameraPreviewArea()
         self.camera_preview_area.setVisible(False)
+        self.camera_preview_area.camera_selected.connect(self._on_camera_selected)
         main_layout.addWidget(self.camera_preview_area, 1)
+
+        # 3. 데이터셋 설정 패널
+        self.dataset_setting_panel = DatasetSettingPanel()
+        self.dataset_setting_panel.setVisible(False)
+        main_layout.addWidget(self.dataset_setting_panel, 1)
 
         # 빈 메인 영역 (기본)
         self.empty_area = QWidget()
@@ -44,12 +50,30 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(self.empty_area, 1)
 
     def _on_menu_selected(self, menu_id: str):
+        # 모든 영역 숨기기
+        self.camera_preview_area.setVisible(False)
+        self.dataset_setting_panel.setVisible(False)
+        self.empty_area.setVisible(False)
+
         if menu_id == 'camera_preview':
             self.camera_preview_area.setVisible(True)
-            self.empty_area.setVisible(False)
+        elif menu_id == 'dataset_setting':
+            self.dataset_setting_panel.setVisible(True)
         else:
-            self.camera_preview_area.setVisible(False)
             self.empty_area.setVisible(True)
+
+    def _on_camera_selected(self, topic_name: str):
+        """카메라 선택 시 Dataset Setting 화면으로 전환"""
+        self.dataset_setting_panel.set_camera(topic_name)
+
+        # 모든 영역 숨기고 Dataset Setting 표시
+        self.camera_preview_area.setVisible(False)
+        self.dataset_setting_panel.setVisible(True)
+        self.empty_area.setVisible(False)
+
+        # 사이드바 메뉴 상태 업데이트
+        self.sidebar._items['camera_preview'].setChecked(False)
+        self.sidebar._items['dataset_setting'].setChecked(True)
 
     def closeEvent(self, event):
         if hasattr(self, 'camera_preview_area'):

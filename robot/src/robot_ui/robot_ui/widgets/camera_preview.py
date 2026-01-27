@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QGridLayout,
     QFrame, QPushButton, QScrollArea
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QImage, QPixmap
 
 import rclpy
@@ -19,18 +19,28 @@ from ..utils import ImageSignal, CameraSubscriberNode
 class CameraPreviewWidget(QFrame):
     """개별 카메라 프리뷰 위젯"""
 
+    clicked = Signal(str)  # topic_name 전달
+
     def __init__(self, topic_name: str, parent=None):
         super().__init__(parent)
         self.topic_name = topic_name
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setStyleSheet("""
             QFrame {
                 background-color: #2d2d2d;
                 border-radius: 8px;
             }
+            QFrame:hover {
+                background-color: #3d3d3d;
+            }
         """)
         self.setMinimumSize(400, 300)
 
         self._setup_ui()
+
+    def mousePressEvent(self, event):
+        self.clicked.emit(self.topic_name)
+        super().mousePressEvent(event)
 
     def _setup_ui(self):
         layout = QVBoxLayout(self)
@@ -88,6 +98,8 @@ class CameraPreviewWidget(QFrame):
 
 class CameraPreviewArea(QWidget):
     """메인 영역의 카메라 프리뷰 그리드"""
+
+    camera_selected = Signal(str)  # topic_name 전달
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -223,10 +235,14 @@ class CameraPreviewArea(QWidget):
 
     def _add_preview(self, topic_name: str):
         widget = CameraPreviewWidget(topic_name)
+        widget.clicked.connect(self._on_camera_clicked)
         self.preview_widgets[topic_name] = widget
 
         if self.ros_node:
             self.ros_node.subscribe_to_topic(topic_name)
+
+    def _on_camera_clicked(self, topic_name: str):
+        self.camera_selected.emit(topic_name)
 
     def _remove_preview(self, topic_name: str):
         if topic_name in self.preview_widgets:

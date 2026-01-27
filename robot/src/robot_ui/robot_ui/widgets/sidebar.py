@@ -76,6 +76,11 @@ class Sidebar(QWidget):
         layout.addWidget(camera_item)
         self._items['camera_preview'] = camera_item
 
+        dataset_item = SidebarItem('dataset_setting', 'Dataset Setting')
+        dataset_item.clicked.connect(lambda: self._on_item_clicked('dataset_setting'))
+        layout.addWidget(dataset_item)
+        self._items['dataset_setting'] = dataset_item
+
         # 추가 메뉴 공간
         layout.addStretch()
 
