@@ -1,7 +1,7 @@
 import asyncio
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout
 from rclpy.logging import get_logger
-from ..widgets import Sidebar, CameraPreviewArea, DatasetSettingPanel
+from ..widgets import Sidebar, CameraPreviewArea, DatasetSettingPanel, DataCollectionPanel
 from ..utils import ApiClient
 
 logger = get_logger('MainWindow')
@@ -51,6 +51,11 @@ class MainWindow(QMainWindow):
         self.dataset_setting_panel.submitted.connect(self._on_dataset_submitted)
         main_layout.addWidget(self.dataset_setting_panel, 1)
 
+        # 4. 데이터 수집 패널
+        self.data_collection_panel = DataCollectionPanel()
+        self.data_collection_panel.setVisible(False)
+        main_layout.addWidget(self.data_collection_panel, 1)
+
         # API 클라이언트
         self.api_client = ApiClient()
 
@@ -63,6 +68,7 @@ class MainWindow(QMainWindow):
         # 모든 영역 숨기기
         self.camera_preview_area.setVisible(False)
         self.dataset_setting_panel.setVisible(False)
+        self.data_collection_panel.setVisible(False)
         self.empty_area.setVisible(False)
 
         if menu_id == 'camera_preview':
@@ -99,9 +105,16 @@ class MainWindow(QMainWindow):
             )
             logger.info(f"Received {len(urls)} presigned URLs")
             logger.info(f"Response: {urls}")
-            #TODO: 데이터 수집 페이지로 이동
+            self._show_data_collection()
         except Exception as e:
             logger.error(f"Error: {e}")
+
+    def _show_data_collection(self):
+        """데이터 수집 페이지로 이동"""
+        self.camera_preview_area.setVisible(False)
+        self.dataset_setting_panel.setVisible(False)
+        self.data_collection_panel.setVisible(True)
+        self.empty_area.setVisible(False)
 
     def closeEvent(self, event):
         if hasattr(self, 'camera_preview_area'):
