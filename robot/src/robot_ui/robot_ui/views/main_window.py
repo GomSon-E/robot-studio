@@ -1,6 +1,9 @@
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout
+from rclpy.logging import get_logger
 from ..widgets import Sidebar, CameraPreviewArea, DatasetSettingPanel
 from ..utils import ApiClient, PresignedUrlWorker
+
+logger = get_logger('MainWindow')
 
 
 class MainWindow(QMainWindow):
@@ -84,7 +87,7 @@ class MainWindow(QMainWindow):
 
     def _on_dataset_submitted(self, settings: dict):
         """Dataset Setting 제출 시 presigned URL 요청"""
-        print(f"[MainWindow] Dataset settings submitted: {settings}")
+        logger.info(f"Dataset settings submitted: {settings}")
 
         # 이전 워커가 있으면 정리
         if self.url_worker and self.url_worker.isRunning():
@@ -93,7 +96,7 @@ class MainWindow(QMainWindow):
 
         # 새 워커 시작
         self.url_worker = PresignedUrlWorker(self.api_client, settings)
-        self.url_worker.finished.connect(self._on_presigned_urls_received)
+        self.url_worker.urls_received.connect(self._on_presigned_urls_received)
         self.url_worker.error.connect(self._on_presigned_url_error)
         self.url_worker.start()
 
@@ -101,15 +104,14 @@ class MainWindow(QMainWindow):
 
     def _on_presigned_urls_received(self, urls: list):
         """Presigned URL 수신 완료"""
-        print(f"[MainWindow] Received {len(urls)} presigned URLs")
-        for i, url_info in enumerate(urls):
-            print(f"  Episode {i}: {url_info['url'][:50]}...")
+        logger.info(f"Received {len(urls)} presigned URLs")
+        logger.info(f"Response: {urls}")
 
         #TODO: 로딩 표시 그만 -> 데이터 수집 페이지로 이동
 
     def _on_presigned_url_error(self, error_msg: str):
         """Presigned URL 요청 에러"""
-        print(f"[MainWindow] Error: {error_msg}")
+        logger.error(f"Error: {error_msg}")
 
         #TODO: 로딩 표시 그만 -> 에러 메시지 표시 
 
