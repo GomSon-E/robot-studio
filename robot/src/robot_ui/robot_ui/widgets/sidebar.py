@@ -38,6 +38,7 @@ class Sidebar(QWidget):
     """고정 너비 사이드바"""
 
     menu_selected = Signal(str)  # menu_id 전달
+    exit_requested = Signal()  # 종료 요청
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -83,6 +84,27 @@ class Sidebar(QWidget):
 
         # 추가 메뉴 공간
         layout.addStretch()
+
+        # Exit 버튼
+        exit_btn = QPushButton('Exit')
+        exit_btn.setFixedHeight(40)
+        exit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        exit_btn.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;
+                border: none;
+                border-radius: 4px;
+                color: #cc6666;
+                font-size: 13px;
+                text-align: left;
+                padding-left: 16px;
+            }
+            QPushButton:hover {
+                background-color: #4a2525;
+            }
+        """)
+        exit_btn.clicked.connect(self.exit_requested.emit)
+        layout.addWidget(exit_btn)
 
     def _on_item_clicked(self, item_id: str):
         # 다른 아이템 체크 해제

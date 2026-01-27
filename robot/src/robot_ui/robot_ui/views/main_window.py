@@ -31,6 +31,7 @@ class MainWindow(QMainWindow):
         # 1. 고정 사이드바
         self.sidebar = Sidebar()
         self.sidebar.menu_selected.connect(self._on_menu_selected)
+        self.sidebar.exit_requested.connect(self.close)
         main_layout.addWidget(self.sidebar)
 
         # 2. 메인 콘텐츠 영역
