@@ -1,0 +1,11 @@
+PySide6
+PyQt6
+qasync
+aiohttp
+opencv-contrib-python-headless
+pyserial
+numpy<2
+httpx
+python-dotenv
+fastapi
+pydantic

@@ -1,0 +1,11 @@
+services:
+  robot:
+    build: .
+    privileged: true
+    network_mode: host
+    environment:
+      - DISPLAY=${DISPLAY}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /dev:/dev
+      - ./src:/root/robot/src
