@@ -25,6 +25,8 @@ services:
       MINIO_BUCKET_NAME: lerobot-soarm-dataset
     depends_on:
       - minio
+    volumes:
+      - ./app:/app/app
 
 volumes:
   minio_data:
