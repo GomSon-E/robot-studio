@@ -44,5 +44,8 @@ ros2_ws/log/
 *.bag
 *.db3
 
+# Node.js
+node_modules/
+
 # MinIO data
 minio-data/
