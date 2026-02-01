@@ -94,7 +94,7 @@ class MainWindow(QMainWindow):
     def _on_dataset_submitted(self, settings: dict):
         """Dataset Setting 제출 시 presigned URL 요청"""
         logger.info(f"Dataset settings submitted: {settings}")
-        asyncio.create_task(self._fetch_presigned_urls(settings))
+        self.fetching_url_task = asyncio.create_task(self._fetch_presigned_urls(settings))
 
     async def _fetch_presigned_urls(self, settings: dict):
         """Presigned URL 비동기 요청"""

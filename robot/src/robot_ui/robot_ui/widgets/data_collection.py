@@ -115,7 +115,7 @@ class DataCollectionPanel(QWidget):
     def _on_record_clicked(self):
         """Record 버튼 클릭 시"""
         if not self.is_recording:
-            asyncio.create_task(self._start_recording())
+            self.recodign_task = asyncio.create_task(self._start_recording())
 
     def _on_frame_received(self, msg: Image):
         """ROS2 토픽에서 프레임 수신"""
