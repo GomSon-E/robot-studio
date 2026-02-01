@@ -43,6 +43,3 @@ ros2_ws/log/
 .colcon/
 *.bag
 *.db3
-
-# MinIO data
-minio-data/
