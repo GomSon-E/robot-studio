@@ -1,19 +1,10 @@
-FROM ubuntu:22.04
+FROM ros:humble-ros-base
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DISPLAY=unix:0
 
-# ROS 2 Humble 설치
+# ROS 개발 도구 설치
 RUN apt-get update && apt-get install -y \
-    software-properties-common \
-    curl \
-    gnupg \
-    lsb-release \
-    && add-apt-repository universe \
-    && curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2.list \
-    && apt-get update && apt-get install -y \
-    ros-humble-desktop \
     ros-dev-tools \
     && rm -rf /var/lib/apt/lists/*
 
@@ -23,6 +14,15 @@ RUN apt-get update && apt-get install -y \
     libxcb-icccm4 \
     libxcb-keysyms1 \
     libxcb-shape0 \
+    libxcb-xinerama0 \
+    libxcb-render-util0 \
+    libxcb-xkb1 \
+    libxkbcommon-x11-0 \
+    libxkbcommon0 \
+    libgl1-mesa-glx \
+    libegl1 \
+    libfontconfig1 \
+    libdbus-1-3 \
     python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
