@@ -19,10 +19,10 @@ async def get_upload_url(
     service: ObjectService = Depends(get_object_service)
 ):
     try:
-        url, expires_in = service.create_presigned_upload_url(
+        url = service.create_presigned_upload_url(
             object_key=request.object_name
         )
-        return PresignedUrlResponse(url=url, expires_in=expires_in)
+        return PresignedUrlResponse(url=url)
     except Exception as e:
         raise HTTPException(
             status_code=500,

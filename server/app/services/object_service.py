@@ -4,9 +4,7 @@ class ObjectService:
     def __init__(self, s3_client):
         self.client = s3_client
 
-    def create_presigned_upload_url(self, object_key: str) -> tuple[str, int]:
-        expires_in = settings.PRESIGNED_URL_EXPIRE_MINUTES * 60
-
+    def create_presigned_upload_url(self, object_key: str) -> str:
         url = self.client.generate_presigned_url(
             "put_object",
             Params={
@@ -14,7 +12,7 @@ class ObjectService:
                 "Key": object_key,
                 "ContentType": "video/mp4",
             },
-            ExpiresIn=expires_in,
+            ExpiresIn=settings.PRESIGNED_URL_EXPIRE_MINUTES * 60,
         )
 
-        return url, expires_in
+        return url
