@@ -10,6 +10,7 @@ from PySide6.QtCore import Qt, Signal
 from rclpy.logging import get_logger
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
+from ..utils import ApiClient
 
 logger = get_logger('DataCollection')
 
@@ -22,12 +23,12 @@ class DataCollectionPanel(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.settings: dict = {}
-        self.presigned_urls: list = []
         self.is_recording = False
         self.collected_frames: list = []
         self.ros_node = None
         self.bridge = CvBridge()
         self._frame_subscription = None
+        self.api_client = ApiClient()
         self._setup_ui()
 
     def _setup_ui(self):
@@ -103,10 +104,9 @@ class DataCollectionPanel(QWidget):
         """ROS2 노드 설정"""
         self.ros_node = ros_node
 
-    def set_recording_config(self, settings: dict, presigned_urls: list):
+    def set_recording_config(self, settings: dict):
         """녹화 설정 저장"""
         self.settings = settings
-        self.presigned_urls = presigned_urls
         self.status_label.setText(
             f"Ready: {settings['episodes']} episodes, "
             f"{settings['data_length']}s each"
@@ -128,70 +128,107 @@ class DataCollectionPanel(QWidget):
 
     async def _start_recording(self):
         """녹화 시작"""
-        if not self.presigned_urls:
-            logger.error("No presigned URLs available")
-            return
-
         if not self.ros_node:
             logger.error("ROS2 node not available")
             return
 
+        episodes = self.settings.get('episodes', 1)
+
         self.is_recording = True
         self.record_btn.setEnabled(False)
         self.progress_bar.setVisible(True)
-        self.progress_bar.setMaximum(len(self.presigned_urls))
+        self.progress_bar.setMaximum(episodes)
         self.progress_bar.setValue(0)
 
         topic = self.settings.get('topic', '')
-        data_length = self.settings.get('data_length', 10.0)
-        term_length = self.settings.get('term_length', 1.0)
 
         # 토픽 구독
         self._frame_subscription = self.ros_node.create_subscription(
             Image, topic, self._on_frame_received, 10
         )
 
-        for i, url_info in enumerate(self.presigned_urls):
-            self.status_label.setText(f"Recording episode {i + 1}/{len(self.presigned_urls)}...")
-            self.progress_bar.setValue(i)
+        # 수집 → 저장 큐
+        queue = asyncio.Queue()
 
-            try:
-                # 프레임 수집
-                self.collected_frames = []
-                await asyncio.sleep(data_length)
-
-                # 영상 파일 생성
-                if self.collected_frames:
-                    video_path = self._save_video()
-
-                    if video_path:
-                        # MinIO에 업로드
-                        self.status_label.setText(f"Uploading episode {i + 1}...")
-                        await self._upload_video(video_path, url_info['url'])
-
-                        # 임시 파일 삭제
-                        Path(video_path).unlink(missing_ok=True)
-                else:
-                    logger.error(f"No frames collected for episode {i + 1}")
-
-                # 다음 에피소드 전 대기 (마지막 제외)
-                if i < len(self.presigned_urls) - 1 and term_length > 0:
-                    self.status_label.setText(f"Waiting {term_length}s...")
-                    await asyncio.sleep(term_length)
-
-            except Exception as e:
-                logger.error(f"Error recording episode {i + 1}: {e}")
+        # 수집 태스크와 저장 태스크 동시 실행
+        await asyncio.gather(
+            self._collect_episodes(queue),
+            self._upload_episodes(queue),
+        )
 
         # 구독 해제
         if self._frame_subscription:
             self.ros_node.destroy_subscription(self._frame_subscription)
             self._frame_subscription = None
 
-        self.progress_bar.setValue(len(self.presigned_urls))
+        self.progress_bar.setValue(episodes)
         self.status_label.setText("Recording complete!")
         self.is_recording = False
         self.record_btn.setEnabled(True)
         self.recording_finished.emit()
+
+    async def _collect_episodes(self, queue: asyncio.Queue):
+        """데이터 수집 태스크"""
+        episodes = self.settings.get('episodes', 1)
+        data_length = self.settings.get('data_length', 10.0)
+        term_length = self.settings.get('term_length', 1.0)
+
+        for i in range(episodes):
+            self.status_label.setText(f"Recording episode {i + 1}/{episodes}...")
+
+            # 프레임 수집
+            self.collected_frames = []
+            await asyncio.sleep(data_length)
+
+            # 영상 파일 생성 후 큐에 전달
+            if self.collected_frames:
+                video_path = self._save_video()
+                if video_path:
+                    await queue.put((i, video_path))
+                else:
+                    logger.error(f"Failed to save video for episode {i + 1}")
+            else:
+                logger.error(f"No frames collected for episode {i + 1}")
+
+            # 다음 에피소드 전 대기 (마지막 제외)
+            if i < episodes - 1 and term_length > 0:
+                self.status_label.setText(f"Waiting {term_length}s...")
+                await asyncio.sleep(term_length)
+
+        # 종료 신호
+        await queue.put(None)
+
+    async def _upload_episodes(self, queue: asyncio.Queue):
+        """데이터 저장 태스크"""
+        topic = self.settings.get('topic', '')
+        safe_topic = topic.strip('/').replace('/', '_')
+        episodes = self.settings.get('episodes', 1)
+
+        while True:
+            item = await queue.get()
+            if item is None:
+                break
+
+            episode_index, video_path = item
+
+            try:
+                # presigned URL 1개 요청
+                object_name = f"{safe_topic}/episode_{episode_index:04d}.mp4"
+                presigned_url = await self.api_client.get_presigned_url(object_name)
+
+                # S3에 업로드
+                self.status_label.setText(f"Uploading episode {episode_index + 1}...")
+                await self._upload_video(video_path, presigned_url)
+
+                # 임시 파일 삭제
+                Path(video_path).unlink(missing_ok=True)
+
+                self.progress_bar.setValue(episode_index + 1)
+                logger.info(f"Episode {episode_index + 1}/{episodes} uploaded")
+
+            except Exception as e:
+                logger.error(f"Error uploading episode {episode_index + 1}: {e}")
+                Path(video_path).unlink(missing_ok=True)
 
     def _save_video(self) -> Optional[str]:
         """수집된 프레임을 비디오 파일로 저장"""

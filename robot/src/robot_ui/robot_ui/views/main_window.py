@@ -1,8 +1,6 @@
-import asyncio
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout
 from rclpy.logging import get_logger
 from ..widgets import Sidebar, CameraPreviewArea, DatasetSettingPanel, DataCollectionPanel
-from ..utils import ApiClient
 
 logger = get_logger('MainWindow')
 
@@ -56,9 +54,6 @@ class MainWindow(QMainWindow):
         self.data_collection_panel.setVisible(False)
         main_layout.addWidget(self.data_collection_panel, 1)
 
-        # API 클라이언트
-        self.api_client = ApiClient()
-
         # 빈 메인 영역 (기본)
         self.empty_area = QWidget()
         self.empty_area.setStyleSheet("background-color: #1e1e1e;")
@@ -92,33 +87,17 @@ class MainWindow(QMainWindow):
         self.sidebar._items['dataset_setting'].setChecked(True)
 
     def _on_dataset_submitted(self, settings: dict):
-        """Dataset Setting 제출 시 presigned URL 요청"""
+        """Dataset Setting 제출 시 데이터 수집 화면으로 이동"""
         logger.info(f"Dataset settings submitted: {settings}")
-        asyncio.create_task(self._fetch_presigned_urls(settings))
-
-    async def _fetch_presigned_urls(self, settings: dict):
-        """Presigned URL 비동기 요청"""
-        try:
-            urls = await self.api_client.get_presigned_urls(
-                topic=settings['topic'],
-                episodes=settings['episodes']
-            )
-            logger.info(f"Received {len(urls)} presigned URLs")
-            logger.info(f"Response: {urls}")
-            self._show_data_collection(settings, urls)
-        except Exception as e:
-            logger.error(f"Error: {e}")
-
-    def _show_data_collection(self, settings: dict, presigned_urls: list):
-        """데이터 수집 페이지로 이동"""
+        
         # ROS2 노드 공유
         if self.camera_preview_area.ros_node:
             self.data_collection_panel.set_ros_node(self.camera_preview_area.ros_node)
-        self.data_collection_panel.set_recording_config(settings, presigned_urls)
+        self.data_collection_panel.set_recording_config(settings)
         self.camera_preview_area.setVisible(False)
         self.dataset_setting_panel.setVisible(False)
         self.data_collection_panel.setVisible(True)
-        self.empty_area.setVisible(False)
+        self.empty_area.setVisible(False)      
 
     def closeEvent(self, event):
         if hasattr(self, 'camera_preview_area'):
