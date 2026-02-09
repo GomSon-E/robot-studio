@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   minio:
     image: minio/minio
@@ -39,7 +37,7 @@ services:
       - minio
       - postgres
     volumes:
-      - ./server/app:/app/app
+      - ./app:/app/app
 
 volumes:
   minio_data:
