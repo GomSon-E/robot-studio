@@ -18,7 +18,7 @@ export async function login(email: string, password: string): Promise<TokenRespo
   return res.json();
 }
 
-export async function signup(username: string, email: string, password: string): Promise<TokenResponse> {
+export async function signup(username: string, email: string, password: string): Promise<void> {
   const res = await fetch(`${API_BASE}/auth/signup`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -28,5 +28,4 @@ export async function signup(username: string, email: string, password: string):
     const err = await res.json();
     throw new Error(err.detail || "회원가입에 실패했습니다");
   }
-  return res.json();
 }
