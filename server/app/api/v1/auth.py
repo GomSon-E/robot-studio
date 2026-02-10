@@ -3,7 +3,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.infra.database import get_db
 from app.services.auth_service import AuthService
 from app.schemas.auth import SignupRequest, SignupResponse, TokenResponse, RefreshRequest, LoginRequest
-
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 def get_auth_service(db: AsyncSession = Depends(get_db)) -> AuthService:
