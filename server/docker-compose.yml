@@ -1,13 +1,9 @@
-version: '3.8'
-
 services:
   fastapi:
     build: .
     ports:
       - "8000:8000"
-    environment:
-      AWS_DEFAULT_REGION: ap-northeast-2
-      ${AWS_ACCESS_KEY_ID}
-      ${AWS_SECRET_ACCESS_KEY}
+    env_file:
+      - .env
     volumes:
       - ./app:/app/app
