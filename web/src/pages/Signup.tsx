@@ -1,21 +1,28 @@
 import { useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { signup } from "../api/auth";
 import "./Auth.css";
 
 export default function Signup() {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      alert("비밀번호가 일치하지 않습니다.");
+      setError("비밀번호가 일치하지 않습니다.");
       return;
     }
-    // TODO: API 연동
-    console.log("signup", { name, email, password });
+    try {
+      await signup(name, email, password);
+      navigate("/login");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "회원가입에 실패했습니다");
+    }
   };
 
   return (
@@ -23,6 +30,7 @@ export default function Signup() {
       <div className="auth-card">
         <h1>회원가입</h1>
         <p className="subtitle">새 계정을 만들어 시작하세요</p>
+        {error && <p className="error-message">{error}</p>}
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="name">이름</label>
