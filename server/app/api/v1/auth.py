@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.infra.database import get_db
 from app.services.auth_service import AuthService
-from app.schemas.auth import SignupRequest, TokenResponse
+from app.schemas.auth import SignupRequest, TokenResponse, LoginRequest
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -16,3 +16,11 @@ async def signup(req: SignupRequest, service: AuthService = Depends(get_auth_ser
         return TokenResponse(access_token=token)
     except ValueError as e:
         raise HTTPException(status_code=409, detail=str(e))
+    
+@router.post("/login", response_model=TokenResponse)
+async def login(req: LoginRequest, service: AuthService = Depends(get_auth_service)):
+    try:
+        token = await service.login(req.email, req.password)
+        return TokenResponse(access_token=token)
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=str(e))
