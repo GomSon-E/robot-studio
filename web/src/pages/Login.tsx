@@ -1,15 +1,23 @@
 import { useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { login } from "../api/auth";
 import "./Auth.css";
 
 export default function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    // TODO: API 연동
-    console.log("login", { email, password });
+    try {
+      const { access_token } = await login(email, password);
+      localStorage.setItem("access_token", access_token);
+      navigate("/");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "로그인에 실패했습니다");
+    }
   };
 
   return (
@@ -17,6 +25,7 @@ export default function Login() {
       <div className="auth-card">
         <h1>로그인</h1>
         <p className="subtitle">Robot Studio에 오신 것을 환영합니다</p>
+        {error && <p className="error-message">{error}</p>}
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="email">이메일</label>
