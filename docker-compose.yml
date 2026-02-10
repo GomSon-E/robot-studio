@@ -13,6 +13,17 @@ services:
     volumes:
       - minio_data:/data
 
+  postgres:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: robot_studio
+      POSTGRES_PASSWORD: robot_studio
+      POSTGRES_DB: robot_studio
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   fastapi:
     build: ./server
     ports:
@@ -23,8 +34,10 @@ services:
       MINIO_SECRET_KEY: minioadmin
       MINIO_SECURE: "false"
       MINIO_BUCKET_NAME: lerobot-soarm-dataset
+      DATABASE_URL: postgresql+asyncpg://robot_studio:robot_studio@postgres:5432/robot_studio
     depends_on:
       - minio
+      - postgres
     volumes:
       - ./server/app:/app/app
 
@@ -37,3 +50,4 @@ services:
 
 volumes:
   minio_data:
+  postgres_data:
