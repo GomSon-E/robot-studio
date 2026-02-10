@@ -11,3 +11,4 @@ services:
       - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority:ro
       - /dev:/dev
       - ./src:/root/robot/src
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority:ro

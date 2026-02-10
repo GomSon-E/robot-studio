@@ -89,7 +89,7 @@ class MainWindow(QMainWindow):
     def _on_dataset_submitted(self, settings: dict):
         """Dataset Setting 제출 시 데이터 수집 화면으로 이동"""
         logger.info(f"Dataset settings submitted: {settings}")
-        
+
         # ROS2 노드 공유
         if self.camera_preview_area.ros_node:
             self.data_collection_panel.set_ros_node(self.camera_preview_area.ros_node)

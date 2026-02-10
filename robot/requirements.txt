@@ -3,6 +3,7 @@ PyQt6
 qasync
 aiohttp
 opencv-contrib-python-headless
+cv_bridge
 pyserial
 numpy<2
 httpx
