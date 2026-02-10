@@ -19,8 +19,8 @@ async def signup(req: SignupRequest, service: AuthService = Depends(get_auth_ser
 @router.post("/login", response_model=TokenResponse)
 async def login(req: LoginRequest, service: AuthService = Depends(get_auth_service)):
     try:
-        token = await service.login(req.email, req.password)
-        return TokenResponse(access_token=token)
+        access_token, refresh_token = await service.login(req.email, req.password)
+        return TokenResponse(access_token=access_token, refresh_token=refresh_token)
     except ValueError as e:
         raise HTTPException(status_code=401, detail=str(e))
 
