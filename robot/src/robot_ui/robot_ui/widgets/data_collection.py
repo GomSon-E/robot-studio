@@ -203,6 +203,7 @@ class DataCollectionPanel(QWidget):
         topic = self.settings.get('topic', '')
         safe_topic = topic.strip('/').replace('/', '_')
         episodes = self.settings.get('episodes', 1)
+        max_retries = 3
 
         while True:
             item = await queue.get()
@@ -210,25 +211,43 @@ class DataCollectionPanel(QWidget):
                 break
 
             episode_index, video_path = item
+            object_name = f"{safe_topic}/episode_{episode_index:04d}.mp4"
+            uploaded = False
 
-            try:
-                # presigned URL 1개 요청
-                object_name = f"{safe_topic}/episode_{episode_index:04d}.mp4"
-                presigned_url = await self.api_client.get_presigned_url(object_name)
+            for attempt in range(max_retries):
+                try:
+                    # presigned URL 요청 (재시도 시 새로 발급)
+                    presigned_url = await self.api_client.get_presigned_url(object_name)
 
-                # S3에 업로드
-                self.status_label.setText(f"Uploading episode {episode_index + 1}...")
-                await self._upload_video(video_path, presigned_url)
+                    # S3에 업로드
+                    if attempt == 0:
+                        self.status_label.setText(f"Uploading episode {episode_index + 1}...")
+                    else:
+                        self.status_label.setText(
+                            f"Retrying episode {episode_index + 1} ({attempt + 1}/{max_retries})..."
+                        )
+                    await self._upload_video(video_path, presigned_url)
 
-                # 임시 파일 삭제
-                Path(video_path).unlink(missing_ok=True)
+                    uploaded = True
+                    break
 
+                except Exception as e:
+                    logger.warning(
+                        f"Upload attempt {attempt + 1}/{max_retries} failed "
+                        f"for episode {episode_index + 1}: {e}"
+                    )
+                    if attempt < max_retries - 1:
+                        delay = 2 ** attempt
+                        logger.info(f"Retrying in {delay}s...")
+                        await asyncio.sleep(delay)
+
+            Path(video_path).unlink(missing_ok=True)
+
+            if uploaded:
                 self.progress_bar.setValue(episode_index + 1)
                 logger.info(f"Episode {episode_index + 1}/{episodes} uploaded")
-
-            except Exception as e:
-                logger.error(f"Error uploading episode {episode_index + 1}: {e}")
-                Path(video_path).unlink(missing_ok=True)
+            else:
+                logger.error(f"Episode {episode_index + 1} upload failed after {max_retries} attempts")
 
     def _save_video(self) -> Optional[str]:
         """수집된 프레임을 비디오 파일로 저장"""
@@ -268,4 +287,9 @@ class DataCollectionPanel(QWidget):
                 if response.status == 200:
                     logger.info(f"Upload successful: {presigned_url[:50]}...")
                 else:
-                    logger.error(f"Upload failed: {response.status}")
+                    raise aiohttp.ClientResponseError(
+                        response.request_info,
+                        response.history,
+                        status=response.status,
+                        message=f"Upload failed with status {response.status}",
+                    )
