@@ -12,8 +12,9 @@ export default function Login() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      const { access_token } = await login(email, password);
+      const { access_token, refresh_token } = await login(email, password);
       localStorage.setItem("access_token", access_token);
+      localStorage.setItem("refresh_token", refresh_token);
       navigate("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "로그인에 실패했습니다");
