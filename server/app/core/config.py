@@ -11,9 +11,12 @@ class Settings(BaseSettings):
 
     #DATABASE CONFIGURATION
     DATABASE_URL: str = "postgresql+asyncpg://robot_studio:robot_studio@localhost:5432/robot_studio"
-    JWT_SECRET_KEY: str = "change-this-to-random-secret"
+    
+    #JWT CONFIGURATION
+    JWT_SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7   
     
     class Config:
         env_file = ".env"
