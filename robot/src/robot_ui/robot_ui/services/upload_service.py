@@ -35,15 +35,5 @@ class UploadService:
 
     async def _upload_video(self, video_path: str, presigned_url: str):
         """Presigned URL로 비디오 파일 업로드"""
-        with open(video_path, 'rb') as f:
-            video_data = f.read()
-
-        async with self.api_client.session.put(
-            presigned_url,
-            data=video_data,
-            headers={'Content-Type': 'video/mp4'},
-        ) as response:
-            if response.status == 200:
-                logger.info(f"Upload successful: {presigned_url[:50]}...")
-            else:
-                response.raise_for_status()
+        await self.api_client.upload_to_s3(presigned_url, video_path)
+        logger.info(f"Upload successful: {presigned_url[:50]}...")
