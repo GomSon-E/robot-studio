@@ -1,5 +1,4 @@
 import asyncio
-import aiohttp
 from rclpy.logging import get_logger
 
 from ..utils.api_client import ApiClient
@@ -39,18 +38,12 @@ class UploadService:
         with open(video_path, 'rb') as f:
             video_data = f.read()
 
-        async with aiohttp.ClientSession() as session:
-            async with session.put(
-                presigned_url,
-                data=video_data,
-                headers={'Content-Type': 'video/mp4'},
-            ) as response:
-                if response.status == 200:
-                    logger.info(f"Upload successful: {presigned_url[:50]}...")
-                else:
-                    raise aiohttp.ClientResponseError(
-                        response.request_info,
-                        response.history,
-                        status=response.status,
-                        message=f"Upload failed with status {response.status}",
-                    )
+        async with self.api_client.session.put(
+            presigned_url,
+            data=video_data,
+            headers={'Content-Type': 'video/mp4'},
+        ) as response:
+            if response.status == 200:
+                logger.info(f"Upload successful: {presigned_url[:50]}...")
+            else:
+                response.raise_for_status()
