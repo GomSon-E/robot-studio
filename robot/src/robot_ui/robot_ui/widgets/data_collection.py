@@ -1,16 +1,10 @@
 import asyncio
-import tempfile
-import cv2
-import aiohttp
-import numpy as np
-from pathlib import Path
-from typing import Optional
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QProgressBar
 from PySide6.QtCore import Qt, Signal
 from rclpy.logging import get_logger
 from sensor_msgs.msg import Image
-from cv_bridge import CvBridge
 from ..utils import ApiClient
+from ..services import UploadService, RecordingService
 
 logger = get_logger('DataCollection')
 
@@ -24,11 +18,9 @@ class DataCollectionPanel(QWidget):
         super().__init__(parent)
         self.settings: dict = {}
         self.is_recording = False
-        self.collected_frames: list = []
         self.ros_node = None
-        self.bridge = CvBridge()
         self._frame_subscription = None
-        self.api_client = ApiClient()
+        self.recording_service = RecordingService(UploadService(ApiClient()))
         self._setup_ui()
 
     def _setup_ui(self):
@@ -117,15 +109,6 @@ class DataCollectionPanel(QWidget):
         if not self.is_recording:
             self.recodign_task = asyncio.create_task(self._start_recording())
 
-    def _on_frame_received(self, msg: Image):
-        """ROS2 토픽에서 프레임 수신"""
-        if self.is_recording:
-            try:
-                cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
-                self.collected_frames.append(cv_image.copy())
-            except Exception as e:
-                logger.error(f"Failed to convert frame: {e}")
-
     async def _start_recording(self):
         """녹화 시작"""
         if not self.ros_node:
@@ -133,6 +116,7 @@ class DataCollectionPanel(QWidget):
             return
 
         episodes = self.settings.get('episodes', 1)
+        topic = self.settings.get('topic', '')
 
         self.is_recording = True
         self.record_btn.setEnabled(False)
@@ -140,23 +124,16 @@ class DataCollectionPanel(QWidget):
         self.progress_bar.setMaximum(episodes)
         self.progress_bar.setValue(0)
 
-        topic = self.settings.get('topic', '')
-
-        # 토픽 구독
         self._frame_subscription = self.ros_node.create_subscription(
-            Image, topic, self._on_frame_received, 10
+            Image, topic, self.recording_service.on_frame_received, 10
         )
 
-        # 수집 → 저장 큐
-        queue = asyncio.Queue()
-
-        # 수집 태스크와 저장 태스크 동시 실행
-        await asyncio.gather(
-            self._collect_episodes(queue),
-            self._upload_episodes(queue),
+        await self.recording_service.run(
+            self.settings,
+            on_status=self.status_label.setText,
+            on_progress=lambda idx: self.progress_bar.setValue(idx + 1),
         )
 
-        # 구독 해제
         if self._frame_subscription:
             self.ros_node.destroy_subscription(self._frame_subscription)
             self._frame_subscription = None
@@ -166,130 +143,3 @@ class DataCollectionPanel(QWidget):
         self.is_recording = False
         self.record_btn.setEnabled(True)
         self.recording_finished.emit()
-
-    async def _collect_episodes(self, queue: asyncio.Queue):
-        """데이터 수집 태스크"""
-        episodes = self.settings.get('episodes', 1)
-        data_length = self.settings.get('data_length', 10.0)
-        term_length = self.settings.get('term_length', 1.0)
-
-        for i in range(episodes):
-            self.status_label.setText(f"Recording episode {i + 1}/{episodes}...")
-
-            # 프레임 수집
-            self.collected_frames = []
-            await asyncio.sleep(data_length)
-
-            # 영상 파일 생성 후 큐에 전달
-            if self.collected_frames:
-                video_path = self._save_video()
-                if video_path:
-                    await queue.put((i, video_path))
-                else:
-                    logger.error(f"Failed to save video for episode {i + 1}")
-            else:
-                logger.error(f"No frames collected for episode {i + 1}")
-
-            # 다음 에피소드 전 대기 (마지막 제외)
-            if i < episodes - 1 and term_length > 0:
-                self.status_label.setText(f"Waiting {term_length}s...")
-                await asyncio.sleep(term_length)
-
-        # 종료 신호
-        await queue.put(None)
-
-    async def _upload_episodes(self, queue: asyncio.Queue):
-        """데이터 저장 태스크"""
-        topic = self.settings.get('topic', '')
-        safe_topic = topic.strip('/').replace('/', '_')
-        episodes = self.settings.get('episodes', 1)
-        max_retries = 3
-
-        while True:
-            item = await queue.get()
-            if item is None:
-                break
-
-            episode_index, video_path = item
-            object_name = f"{safe_topic}/episode_{episode_index:04d}.mp4"
-            uploaded = False
-
-            for attempt in range(max_retries):
-                try:
-                    # presigned URL 요청 (재시도 시 새로 발급)
-                    presigned_url = await self.api_client.get_presigned_url(object_name)
-
-                    # S3에 업로드
-                    if attempt == 0:
-                        self.status_label.setText(f"Uploading episode {episode_index + 1}...")
-                    else:
-                        self.status_label.setText(
-                            f"Retrying episode {episode_index + 1} ({attempt + 1}/{max_retries})..."
-                        )
-                    await self._upload_video(video_path, presigned_url)
-
-                    uploaded = True
-                    break
-
-                except Exception as e:
-                    logger.warning(
-                        f"Upload attempt {attempt + 1}/{max_retries} failed "
-                        f"for episode {episode_index + 1}: {e}"
-                    )
-                    if attempt < max_retries - 1:
-                        delay = 2 ** attempt
-                        logger.info(f"Retrying in {delay}s...")
-                        await asyncio.sleep(delay)
-
-            Path(video_path).unlink(missing_ok=True)
-
-            if uploaded:
-                self.progress_bar.setValue(episode_index + 1)
-                logger.info(f"Episode {episode_index + 1}/{episodes} uploaded")
-            else:
-                logger.error(f"Episode {episode_index + 1} upload failed after {max_retries} attempts")
-
-    def _save_video(self) -> Optional[str]:
-        """수집된 프레임을 비디오 파일로 저장"""
-        if not self.collected_frames:
-            return None
-
-        fps = 30
-        height, width = self.collected_frames[0].shape[:2]
-
-        # 임시 파일 생성
-        temp_file = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False)
-        video_path = temp_file.name
-        temp_file.close()
-
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        out = cv2.VideoWriter(video_path, fourcc, fps, (width, height))
-
-        for frame in self.collected_frames:
-            out.write(frame)
-
-        out.release()
-
-        logger.info(f"Saved video: {video_path} ({len(self.collected_frames)} frames)")
-        return video_path
-
-    async def _upload_video(self, video_path: str, presigned_url: str):
-        """Presigned URL로 비디오 업로드"""
-        with open(video_path, 'rb') as f:
-            video_data = f.read()
-
-        async with aiohttp.ClientSession() as session:
-            async with session.put(
-                presigned_url,
-                data=video_data,
-                headers={'Content-Type': 'video/mp4'}
-            ) as response:
-                if response.status == 200:
-                    logger.info(f"Upload successful: {presigned_url[:50]}...")
-                else:
-                    raise aiohttp.ClientResponseError(
-                        response.request_info,
-                        response.history,
-                        status=response.status,
-                        message=f"Upload failed with status {response.status}",
-                    )
