@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   minio:
     image: minio/minio
@@ -23,7 +25,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   fastapi:
-    build: .
+    build: ./server
     ports:
       - "8000:8000"
     environment:
@@ -33,11 +35,20 @@ services:
       MINIO_SECURE: "false"
       MINIO_BUCKET_NAME: lerobot-soarm-dataset
       DATABASE_URL: postgresql+asyncpg://robot_studio:robot_studio@postgres:5432/robot_studio
+    env_file:
+      - ./server/.env
     depends_on:
       - minio
       - postgres
     volumes:
-      - ./app:/app/app
+      - ./server/app:/app/app
+
+  web:
+    build: ./web
+    ports:
+      - "3000:80"
+    depends_on:
+      - fastapi
 
 volumes:
   minio_data:
