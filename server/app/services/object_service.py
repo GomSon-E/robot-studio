@@ -1,23 +1,18 @@
-from datetime import timedelta
-from minio import Minio
-
 from app.core.config import settings
 
 class ObjectService:
-    def __init__(self, minio_client: Minio):
-        self.client = minio_client
+    def __init__(self, s3_client):
+        self.client = s3_client
 
-    def create_presigned_upload_url(
-        self,
-        object_key: str,
-        expire_minutes: int | None = None
-    ) -> tuple[str, int]:
-        expires = timedelta(minutes=expire_minutes)
-
-        url = self.client.presigned_put_object(
-            bucket_name=settings.MINIO_BUCKET_NAME,
-            object_name=object_key,
-            expires=expires,
+    def create_presigned_upload_url(self, object_key: str) -> str:
+        url = self.client.generate_presigned_url(
+            "put_object",
+            Params={
+                "Bucket": settings.S3_BUCKET_NAME,
+                "Key": object_key,
+                "ContentType": "video/mp4",
+            },
+            ExpiresIn=settings.PRESIGNED_URL_EXPIRE_MINUTES * 60,
         )
 
-        return url, int(expires.total_seconds())
+        return url

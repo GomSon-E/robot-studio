@@ -8,6 +8,7 @@ services:
       - XAUTHORITY=/root/.Xauthority
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority:ro
       - /dev:/dev
       - ./src:/root/robot/src
       - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority:ro
