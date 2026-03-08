@@ -1,9 +1,27 @@
 services:
+  postgres:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: robot_studio
+      POSTGRES_PASSWORD: robot_studio
+      POSTGRES_DB: robot_studio
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   fastapi:
     build: .
     ports:
       - "8000:8000"
     env_file:
       - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://robot_studio:robot_studio@postgres:5432/robot_studio
+    depends_on:
+      - postgres
     volumes:
       - ./app:/app/app
+
+volumes:
+  postgres_data:
