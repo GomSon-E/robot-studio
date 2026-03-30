@@ -72,7 +72,6 @@ class ApiClient:
                 data = await response.json()
                 return data["url"]
 
-
     async def upload_to_s3(
         self,
         presigned_url: str,
