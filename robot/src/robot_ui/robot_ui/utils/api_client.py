@@ -56,12 +56,12 @@ class ApiClient:
             response.raise_for_status()
             return await response.json()
 
-    async def get_presigned_url(self, object_name: str) -> str:
+    async def get_presigned_url(self, object_name: str, content_type: str = "application/octet-stream") -> str:
         """단일 presigned URL 요청"""
         for attempt in range(2):
             async with self.session.post(
                 f"{self.base_url}/api/v1/objects/presigned-upload-url",
-                json={"object_name": object_name},
+                json={"object_name": object_name, "content_type": content_type},
                 headers=self._auth_headers(),
                 timeout=aiohttp.ClientTimeout(total=10),
             ) as response:
@@ -76,7 +76,7 @@ class ApiClient:
         self,
         presigned_url: str,
         file_path: str,
-        content_type: str = "video/mp4",
+        content_type: str = "application/octet-stream",
     ):
         """Presigned URL로 파일 업로드"""
         with open(file_path, 'rb') as f:
