@@ -106,6 +106,7 @@ class MainWindow(QMainWindow):
                 self.dataset_setting_panel.get_settings()['camera_roles']
             )
 
+
     def _on_menu_selected(self, menu_id: str):
         # 모든 영역 숨기기
         self.teleop_panel.setVisible(False)
