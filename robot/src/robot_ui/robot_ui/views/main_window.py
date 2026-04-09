@@ -99,12 +99,14 @@ class MainWindow(QMainWindow):
             logger.error(f"Code exchange failed: {e}")
             self.login_webview.reset()
 
+
     def _on_topics_updated(self, topics: list):
         self.dataset_setting_panel.set_available_topics(topics)
         if self.data_collection_panel.isVisible():
             self.data_collection_panel.update_camera_roles(
                 self.dataset_setting_panel.get_settings()['camera_roles']
             )
+
 
 
     def _on_menu_selected(self, menu_id: str):
