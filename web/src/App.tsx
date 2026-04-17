@@ -1,10 +1,19 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import AuthCallback from "./pages/AuthCallback";
 import DatasetListPage from "./pages/DatasetListPage";
 import DatasetDetailPage from "./pages/DatasetDetailPage";
-import EpisodeDetailPage from "./pages/EpisodeDetailPage";
+
+function EpisodeRedirect() {
+  const { name, idx } = useParams<{ name: string; idx: string }>();
+  return (
+    <Navigate
+      to={`/datasets/${encodeURIComponent(name ?? "")}?episode=${idx ?? "0"}`}
+      replace
+    />
+  );
+}
 
 function App() {
   return (
@@ -16,7 +25,7 @@ function App() {
         <Route path="/" element={<Navigate to="/datasets" replace />} />
         <Route path="/datasets" element={<DatasetListPage />} />
         <Route path="/datasets/:name" element={<DatasetDetailPage />} />
-        <Route path="/datasets/:name/episodes/:idx" element={<EpisodeDetailPage />} />
+        <Route path="/datasets/:name/episodes/:idx" element={<EpisodeRedirect />} />
         <Route path="*" element={<Navigate to="/datasets" replace />} />
       </Routes>
     </BrowserRouter>
