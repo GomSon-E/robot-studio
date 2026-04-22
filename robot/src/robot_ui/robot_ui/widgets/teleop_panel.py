@@ -18,15 +18,22 @@ from robot_driver.leader_arm_node import LeaderArmNode
 from robot_driver.follower_arm_node import FollowerArmNode
 from robot_driver.teleop_node import TeleopNode
 
+from .theme import (
+    BG_CARD, TEXT_H1, TEXT_BODY, TEXT_MUTED, TEXT_DISABLED,
+    ACCENT, ACCENT_GREEN, ACCENT_RED,
+    btn_primary, btn_success, btn_danger, btn_warning, btn_icon_sm,
+    groupbox_style, combobox_style, scrollbar_style, progressbar_style,
+)
+
 JOINT_NAMES = ['shoulder_pan', 'shoulder_lift', 'elbow_flex', 'wrist_flex', 'wrist_roll', 'gripper']
 POS_MIN = 0
 POS_MAX = 4095
 
 _LED_STYLE = {
-    'connected':    'color: #4ec9b0;',
-    'disconnected': 'color: #f48771;',
-    'connecting':   'color: #dcdcaa;',
-    'idle':         'color: #858585;',
+    'connected':    f'color: {ACCENT_GREEN};',
+    'disconnected': f'color: {ACCENT_RED};',
+    'connecting':   'color: #ca8a04;',
+    'idle':         f'color: {TEXT_DISABLED};',
 }
 
 
@@ -40,7 +47,7 @@ class TeleopSignals(QObject):
     teleop_status_changed    = Signal(str)
 
 
-# ─── UI 전용 ROS2 노드 (상태 구독 + 명령 퍼블리시) ────────────────────────────
+# ─── UI 전용 ROS2 노드 ─────────────────────────────────────────────────────────
 
 class TeleopUINode(Node):
     def __init__(self, signals: TeleopSignals):
@@ -77,28 +84,17 @@ class TeleopUINode(Node):
 # ─── 암 연결 위젯 ─────────────────────────────────────────────────────────────
 
 class ArmConnectionWidget(QGroupBox):
-    connect_clicked = Signal(str)  # 선택된 포트 device 문자열
+    connect_clicked = Signal(str)
 
     def __init__(self, title: str, parent=None):
         super().__init__(title, parent)
-        self.setStyleSheet("""
-            QGroupBox {
-                color: #cccccc;
-                font-size: 13px;
-                font-weight: 600;
-                border: 1px solid #3c3c3c;
-                border-radius: 6px;
-                margin-top: 8px;
-                padding-top: 8px;
-            }
-            QGroupBox::title { subcontrol-origin: margin; left: 8px; padding: 0 4px; }
-        """)
+        self.setStyleSheet(groupbox_style())
         self._setup_ui()
         self._refresh_ports()
 
     def _setup_ui(self):
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(10, 14, 10, 10)
+        layout.setContentsMargins(12, 18, 12, 12)
         layout.setSpacing(8)
 
         self._led = QLabel('●')
@@ -107,59 +103,24 @@ class ArmConnectionWidget(QGroupBox):
         layout.addWidget(self._led)
 
         self._status_label = QLabel('대기')
-        self._status_label.setStyleSheet('color: #858585; font-size: 11px;')
+        self._status_label.setStyleSheet(f'color: {TEXT_MUTED}; font-size: 11px; background: transparent;')
         self._status_label.setFixedWidth(80)
         layout.addWidget(self._status_label)
 
         self._combo = QComboBox()
-        self._combo.setStyleSheet("""
-            QComboBox {
-                background-color: #3c3c3c;
-                border: 1px solid #555;
-                border-radius: 3px;
-                padding: 4px 8px;
-                color: #cccccc;
-                font-size: 12px;
-            }
-            QComboBox::drop-down { border: none; }
-            QComboBox QAbstractItemView {
-                background-color: #3c3c3c;
-                color: #cccccc;
-                selection-background-color: #094771;
-            }
-        """)
+        self._combo.setStyleSheet(combobox_style())
         layout.addWidget(self._combo, 1)
 
         refresh_btn = QPushButton('↺')
-        refresh_btn.setFixedSize(28, 28)
+        refresh_btn.setFixedSize(30, 30)
         refresh_btn.setToolTip('포트 목록 새로고침')
-        refresh_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #3c3c3c;
-                border: 1px solid #555;
-                border-radius: 3px;
-                color: #cccccc;
-                font-size: 14px;
-            }
-            QPushButton:hover { background-color: #505050; }
-        """)
+        refresh_btn.setStyleSheet(btn_icon_sm())
         refresh_btn.clicked.connect(self._refresh_ports)
         layout.addWidget(refresh_btn)
 
         self._connect_btn = QPushButton('연결')
-        self._connect_btn.setFixedHeight(28)
-        self._connect_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #0e639c;
-                color: white;
-                border: none;
-                border-radius: 3px;
-                padding: 4px 16px;
-                font-size: 12px;
-            }
-            QPushButton:hover { background-color: #1177bb; }
-            QPushButton:disabled { background-color: #3c3c3c; color: #555; }
-        """)
+        self._connect_btn.setFixedHeight(30)
+        self._connect_btn.setStyleSheet(btn_primary())
         self._connect_btn.clicked.connect(self._on_connect_clicked)
         layout.addWidget(self._connect_btn)
 
@@ -211,7 +172,7 @@ class JointStateRow(QWidget):
 
         name_label = QLabel(joint_name)
         name_label.setFixedWidth(110)
-        name_label.setStyleSheet('color: #cccccc; font-size: 12px;')
+        name_label.setStyleSheet(f'color: {TEXT_BODY}; font-size: 12px; background: transparent;')
         layout.addWidget(name_label)
 
         self._leader_bar = QProgressBar()
@@ -219,20 +180,17 @@ class JointStateRow(QWidget):
         self._leader_bar.setValue(2048)
         self._leader_bar.setFixedHeight(14)
         self._leader_bar.setTextVisible(False)
-        self._leader_bar.setStyleSheet("""
-            QProgressBar { border: 1px solid #3c3c3c; border-radius: 3px; background-color: #2d2d2d; }
-            QProgressBar::chunk { background-color: #264f78; border-radius: 2px; }
-        """)
+        self._leader_bar.setStyleSheet(progressbar_style(ACCENT))
         layout.addWidget(self._leader_bar, 1)
 
         self._leader_val = QLabel('2048')
         self._leader_val.setFixedWidth(38)
         self._leader_val.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        self._leader_val.setStyleSheet('color: #9cdcfe; font-size: 11px; font-family: monospace;')
+        self._leader_val.setStyleSheet(f'color: {ACCENT}; font-size: 11px; font-family: monospace; background: transparent;')
         layout.addWidget(self._leader_val)
 
         sep = QLabel('→')
-        sep.setStyleSheet('color: #555555; font-size: 11px;')
+        sep.setStyleSheet(f'color: {TEXT_DISABLED}; font-size: 11px; background: transparent;')
         layout.addWidget(sep)
 
         self._follower_bar = QProgressBar()
@@ -240,16 +198,13 @@ class JointStateRow(QWidget):
         self._follower_bar.setValue(2048)
         self._follower_bar.setFixedHeight(14)
         self._follower_bar.setTextVisible(False)
-        self._follower_bar.setStyleSheet("""
-            QProgressBar { border: 1px solid #3c3c3c; border-radius: 3px; background-color: #2d2d2d; }
-            QProgressBar::chunk { background-color: #1e4d3a; border-radius: 2px; }
-        """)
+        self._follower_bar.setStyleSheet(progressbar_style(ACCENT_GREEN))
         layout.addWidget(self._follower_bar, 1)
 
         self._follower_val = QLabel('2048')
         self._follower_val.setFixedWidth(38)
         self._follower_val.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        self._follower_val.setStyleSheet('color: #4ec9b0; font-size: 11px; font-family: monospace;')
+        self._follower_val.setStyleSheet(f'color: {ACCENT_GREEN}; font-size: 11px; font-family: monospace; background: transparent;')
         layout.addWidget(self._follower_val)
 
     def update_leader(self, value: float):
@@ -295,21 +250,16 @@ class TeleopPanel(QWidget):
         main_layout.setSpacing(16)
 
         title = QLabel('Teleop Control')
-        title.setStyleSheet('color: #ffffff; font-size: 18px; font-weight: 600;')
+        title.setStyleSheet(f'color: {TEXT_H1}; font-size: 20px; font-weight: 700; background: transparent;')
         main_layout.addWidget(title)
 
         subtitle = QLabel('리더 → 팔로워 암  (SO-ARM 101)')
-        subtitle.setStyleSheet('color: #858585; font-size: 12px;')
+        subtitle.setStyleSheet(f'color: {TEXT_MUTED}; font-size: 12px; background: transparent;')
         main_layout.addWidget(subtitle)
 
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
-        scroll.setStyleSheet("""
-            QScrollArea { border: none; background-color: transparent; }
-            QScrollBar:vertical { background-color: #1e1e1e; width: 12px; }
-            QScrollBar::handle:vertical { background-color: #424242; border-radius: 6px; min-height: 20px; }
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }
-        """)
+        scroll.setStyleSheet(scrollbar_style())
 
         content = QWidget()
         content.setStyleSheet('background-color: transparent;')
@@ -318,7 +268,10 @@ class TeleopPanel(QWidget):
         content_layout.setSpacing(12)
 
         conn_label = QLabel('연결 설정')
-        conn_label.setStyleSheet('color: #bbbbbb; font-size: 11px; font-weight: 600; letter-spacing: 1px;')
+        conn_label.setStyleSheet(
+            f'color: {TEXT_DISABLED}; font-size: 10px; font-weight: 700; '
+            f'letter-spacing: 1.5px; background: transparent;'
+        )
         content_layout.addWidget(conn_label)
 
         self._leader_widget = ArmConnectionWidget('리더암')
@@ -330,30 +283,19 @@ class TeleopPanel(QWidget):
         content_layout.addWidget(self._follower_widget)
 
         joint_group = QGroupBox('관절 상태')
-        joint_group.setStyleSheet("""
-            QGroupBox {
-                color: #cccccc;
-                font-size: 13px;
-                font-weight: 600;
-                border: 1px solid #3c3c3c;
-                border-radius: 6px;
-                margin-top: 8px;
-                padding-top: 8px;
-            }
-            QGroupBox::title { subcontrol-origin: margin; left: 8px; padding: 0 4px; }
-        """)
+        joint_group.setStyleSheet(groupbox_style())
         joint_layout = QVBoxLayout(joint_group)
-        joint_layout.setContentsMargins(10, 16, 10, 10)
+        joint_layout.setContentsMargins(12, 18, 12, 12)
         joint_layout.setSpacing(4)
 
         legend_layout = QHBoxLayout()
         legend_layout.addSpacing(118)
         leader_legend = QLabel('● 리더')
-        leader_legend.setStyleSheet('color: #9cdcfe; font-size: 11px;')
+        leader_legend.setStyleSheet(f'color: {ACCENT}; font-size: 11px; background: transparent;')
         legend_layout.addWidget(leader_legend)
         legend_layout.addStretch()
         follower_legend = QLabel('● 팔로워')
-        follower_legend.setStyleSheet('color: #4ec9b0; font-size: 11px;')
+        follower_legend.setStyleSheet(f'color: {ACCENT_GREEN}; font-size: 11px; background: transparent;')
         legend_layout.addWidget(follower_legend)
         joint_layout.addLayout(legend_layout)
 
@@ -380,17 +322,7 @@ class TeleopPanel(QWidget):
 
         estop_btn = QPushButton('긴급정지')
         estop_btn.setFixedHeight(44)
-        estop_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #8b1a1a;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                font-size: 14px;
-                font-weight: 600;
-            }
-            QPushButton:hover { background-color: #a52020; }
-        """)
+        estop_btn.setStyleSheet(btn_danger())
         estop_btn.clicked.connect(self._on_estop)
         btn_layout.addWidget(estop_btn, 1)
 
@@ -398,31 +330,9 @@ class TeleopPanel(QWidget):
 
     def _apply_teleop_btn_style(self, active: bool):
         if active:
-            self._teleop_btn.setStyleSheet("""
-                QPushButton {
-                    background-color: #7a5500;
-                    color: white;
-                    border: none;
-                    border-radius: 6px;
-                    font-size: 14px;
-                    font-weight: 600;
-                }
-                QPushButton:hover { background-color: #9a6a00; }
-                QPushButton:disabled { background-color: #2a2a2a; color: #555; }
-            """)
+            self._teleop_btn.setStyleSheet(btn_warning())
         else:
-            self._teleop_btn.setStyleSheet("""
-                QPushButton {
-                    background-color: #16825d;
-                    color: white;
-                    border: none;
-                    border-radius: 6px;
-                    font-size: 14px;
-                    font-weight: 600;
-                }
-                QPushButton:hover { background-color: #1a9a6e; }
-                QPushButton:disabled { background-color: #2a2a2a; color: #555; }
-            """)
+            self._teleop_btn.setStyleSheet(btn_success())
 
     # ── ROS2 초기화 ──────────────────────────────────────────────────────────
 

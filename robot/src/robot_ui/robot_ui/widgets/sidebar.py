@@ -3,6 +3,11 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Signal, Qt
 
+from .theme import (
+    BG_SIDEBAR, BORDER, TEXT_BODY, TEXT_MUTED, TEXT_DISABLED,
+    ACCENT, ACCENT_RED,
+)
+
 
 class SidebarItem(QPushButton):
     """사이드바 메뉴 아이템"""
@@ -14,40 +19,46 @@ class SidebarItem(QPushButton):
         self.setFixedHeight(40)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
-        self.setStyleSheet("""
-            QPushButton {
+        self.setStyleSheet(f"""
+            QPushButton {{
                 background-color: transparent;
                 border: none;
-                border-radius: 4px;
-                color: #cccccc;
+                border-radius: 6px;
+                color: {TEXT_BODY};
                 font-size: 13px;
                 text-align: left;
                 padding-left: 16px;
-            }
-            QPushButton:hover {
-                background-color: #2a2d2e;
-            }
-            QPushButton:checked {
-                background-color: #094771;
-                color: #ffffff;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: #f0f6ff;
+            }}
+            QPushButton:checked {{
+                background-color: #e8f0fe;
+                color: {ACCENT};
+                font-weight: 600;
+            }}
         """)
 
 
 class Sidebar(QWidget):
     """고정 너비 사이드바"""
 
-    menu_selected = Signal(str)  # menu_id 전달
-    exit_requested = Signal()  # 종료 요청
+    menu_selected = Signal(str)
+    exit_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFixedWidth(200)
-        self.setStyleSheet("""
-            QWidget {
-                background-color: #252526;
-                border-right: 1px solid #3c3c3c;
-            }
+        self.setObjectName('Sidebar')
+        self.setStyleSheet(f"""
+            #Sidebar {{
+                background-color: {BG_SIDEBAR};
+                border-right: 1px solid {BORDER};
+            }}
+            QWidget {{
+                background-color: {BG_SIDEBAR};
+                border: none;
+            }}
         """)
 
         self._items = {}
@@ -58,20 +69,20 @@ class Sidebar(QWidget):
         layout.setContentsMargins(8, 8, 8, 8)
         layout.setSpacing(4)
 
-        # 헤더
         header = QLabel('MENU')
-        header.setStyleSheet("""
-            QLabel {
-                color: #bbbbbb;
-                font-size: 11px;
-                font-weight: 600;
-                letter-spacing: 1px;
-                padding: 8px 8px 16px 8px;
-            }
+        header.setStyleSheet(f"""
+            QLabel {{
+                color: {TEXT_DISABLED};
+                font-size: 10px;
+                font-weight: 700;
+                letter-spacing: 1.5px;
+                padding: 8px 8px 12px 8px;
+                background-color: transparent;
+                border: none;
+            }}
         """)
         layout.addWidget(header)
 
-        # 메뉴 아이템들
         calibration_item = SidebarItem('calibration', 'Calibration')
         calibration_item.clicked.connect(lambda: self._on_item_clicked('calibration'))
         layout.addWidget(calibration_item)
@@ -92,32 +103,34 @@ class Sidebar(QWidget):
         layout.addWidget(dataset_item)
         self._items['dataset_setting'] = dataset_item
 
-        # 추가 메뉴 공간
         layout.addStretch()
 
-        # Exit 버튼
+        sep = QFrame()
+        sep.setFrameShape(QFrame.Shape.HLine)
+        sep.setStyleSheet(f"background-color: {BORDER}; border: none; max-height: 1px;")
+        layout.addWidget(sep)
+
         exit_btn = QPushButton('Exit')
         exit_btn.setFixedHeight(40)
         exit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        exit_btn.setStyleSheet("""
-            QPushButton {
+        exit_btn.setStyleSheet(f"""
+            QPushButton {{
                 background-color: transparent;
                 border: none;
-                border-radius: 4px;
-                color: #cc6666;
+                border-radius: 6px;
+                color: {ACCENT_RED};
                 font-size: 13px;
                 text-align: left;
                 padding-left: 16px;
-            }
-            QPushButton:hover {
-                background-color: #4a2525;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: #fef2f2;
+            }}
         """)
         exit_btn.clicked.connect(self.exit_requested.emit)
         layout.addWidget(exit_btn)
 
     def _on_item_clicked(self, item_id: str):
-        # 다른 아이템 체크 해제
         for id_, item in self._items.items():
             if id_ != item_id:
                 item.setChecked(False)
