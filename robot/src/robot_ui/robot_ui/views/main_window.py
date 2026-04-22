@@ -2,6 +2,7 @@ import asyncio
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QStackedWidget
 from rclpy.logging import get_logger
 from ..widgets import Sidebar, CameraPreviewArea, DatasetSettingPanel, DataCollectionPanel, TeleopPanel, LoginWebView, CalibrationPanel
+from ..widgets.theme import BG_PAGE, TEXT_BODY, FONT_FAMILY
 from ..utils.api_client import ApiClient
 
 logger = get_logger('MainWindow')
@@ -13,15 +14,15 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('Robot Studio')
         self.setMinimumSize(1200, 800)
 
-        self.setStyleSheet("""
-            QMainWindow {
-                background-color: #f5f5f5;
-            }
-            QWidget {
-                background-color: #f5f5f5;
-                color: #333333;
-                font-family: -apple-system, 'Segoe UI', sans-serif;
-            }
+        self.setStyleSheet(f"""
+            QMainWindow {{
+                background-color: {BG_PAGE};
+            }}
+            QWidget {{
+                background-color: {BG_PAGE};
+                color: {TEXT_BODY};
+                font-family: {FONT_FAMILY};
+            }}
         """)
 
         self.api_client = ApiClient()
@@ -77,7 +78,7 @@ class MainWindow(QMainWindow):
 
         # 빈 메인 영역 (기본)
         self.empty_area = QWidget()
-        self.empty_area.setStyleSheet("background-color: #f5f5f5;")
+        self.empty_area.setStyleSheet(f"background-color: {BG_PAGE};")
         main_layout.addWidget(self.empty_area, 1)
 
         # 카메라 토픽 목록 → DatasetSettingPanel 콤보박스 + DataCollectionPanel 그리드 연결
