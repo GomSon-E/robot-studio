@@ -27,6 +27,7 @@ setup(
             'leader_arm_node = robot_driver.leader_arm_node:main',
             'follower_arm_node = robot_driver.follower_arm_node:main',
             'teleop_node = robot_driver.teleop_node:main',
+        'calibration_node = robot_driver.calibration_node:main',
         ],
     },
 )

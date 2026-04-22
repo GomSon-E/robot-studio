@@ -72,6 +72,11 @@ class Sidebar(QWidget):
         layout.addWidget(header)
 
         # 메뉴 아이템들
+        calibration_item = SidebarItem('calibration', 'Calibration')
+        calibration_item.clicked.connect(lambda: self._on_item_clicked('calibration'))
+        layout.addWidget(calibration_item)
+        self._items['calibration'] = calibration_item
+
         teleop_item = SidebarItem('teleop', 'Teleop')
         teleop_item.clicked.connect(lambda: self._on_item_clicked('teleop'))
         layout.addWidget(teleop_item)

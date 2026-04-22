@@ -1,7 +1,7 @@
 import asyncio
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QStackedWidget
 from rclpy.logging import get_logger
-from ..widgets import Sidebar, CameraPreviewArea, DatasetSettingPanel, DataCollectionPanel, TeleopPanel, LoginWebView
+from ..widgets import Sidebar, CameraPreviewArea, DatasetSettingPanel, DataCollectionPanel, TeleopPanel, LoginWebView, CalibrationPanel
 from ..utils.api_client import ApiClient
 
 logger = get_logger('MainWindow')
@@ -47,7 +47,12 @@ class MainWindow(QMainWindow):
         self.sidebar.exit_requested.connect(self.close)
         main_layout.addWidget(self.sidebar)
 
-        # 2. 텔레옵 패널
+        # 2. 캘리브레이션 패널
+        self.calibration_panel = CalibrationPanel()
+        self.calibration_panel.setVisible(False)
+        main_layout.addWidget(self.calibration_panel, 1)
+
+        # 3. 텔레옵 패널
         self.teleop_panel = TeleopPanel()
         self.teleop_panel.setVisible(False)
         main_layout.addWidget(self.teleop_panel, 1)
@@ -111,13 +116,16 @@ class MainWindow(QMainWindow):
 
     def _on_menu_selected(self, menu_id: str):
         # 모든 영역 숨기기
+        self.calibration_panel.setVisible(False)
         self.teleop_panel.setVisible(False)
         self.camera_preview_area.setVisible(False)
         self.dataset_setting_panel.setVisible(False)
         self.data_collection_panel.setVisible(False)
         self.empty_area.setVisible(False)
 
-        if menu_id == 'teleop':
+        if menu_id == 'calibration':
+            self.calibration_panel.setVisible(True)
+        elif menu_id == 'teleop':
             self.teleop_panel.setVisible(True)
         elif menu_id == 'camera_preview':
             self.camera_preview_area.setVisible(True)
@@ -151,6 +159,8 @@ class MainWindow(QMainWindow):
         self.empty_area.setVisible(False)
 
     def closeEvent(self, event):
+        if hasattr(self, 'calibration_panel'):
+            self.calibration_panel.cleanup()
         if hasattr(self, 'teleop_panel'):
             self.teleop_panel.cleanup()
         if hasattr(self, 'camera_preview_area'):
