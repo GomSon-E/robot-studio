@@ -36,8 +36,8 @@ class CameraPreviewWidget(QFrame):
                 border-radius: 12px;
             }}
             QFrame:hover {{
-                background-color: #f0f6ff;
-                border-color: #93c5fd;
+                background-color: #f5f3ff;
+                border-color: #c4b5fd;
             }}
         """)
         self.setMinimumSize(400, 300)

@@ -6,8 +6,8 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QGroupBox, QComboBox, QGridLayout, QFrame, QStackedWidget, QMessageBox,
 )
-from PySide6.QtCore import Qt, Signal, QObject
-from PySide6.QtGui import QPainter, QColor, QPen, QFont, QPolygon, QPoint, QPixmap
+from PySide6.QtCore import Qt, Signal, QObject, QPoint
+from PySide6.QtGui import QPainter, QColor, QPen, QFont, QPolygon, QPixmap
 
 import rclpy
 from rclpy.executors import MultiThreadedExecutor
@@ -208,14 +208,14 @@ class CalibrationPanel(QWidget):
 
     def _make_instruction_card(self, title: str, desc: str) -> QFrame:
         card = QFrame()
-        card.setStyleSheet(f'QFrame {{ background: #eff6ff; border-radius: 8px; border: 1px solid #bfdbfe; }}')
+        card.setStyleSheet(f'QFrame {{ background: #faf5ff; border-radius: 8px; border: 1px solid #ddd6fe; }}')
         layout = QVBoxLayout(card)
         layout.setSpacing(4)
         layout.setContentsMargins(12, 10, 12, 10)
 
         title_lbl = QLabel(title)
         title_lbl.setStyleSheet(
-            'color: #1d4ed8; font-size: 13px; font-weight: 600; background: transparent; border: none;'
+            'color: #5b21b6; font-size: 13px; font-weight: 600; background: transparent; border: none;'
         )
         layout.addWidget(title_lbl)
 

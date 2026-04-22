@@ -5,7 +5,7 @@ from PySide6.QtCore import Signal, Qt
 
 from .theme import (
     BG_SIDEBAR, BORDER, TEXT_BODY, TEXT_MUTED, TEXT_DISABLED,
-    ACCENT, ACCENT_RED,
+    ACCENT, ACCENT_BG, ACCENT_ACTIVE_BG, ACCENT_RED,
 )
 
 
@@ -23,17 +23,17 @@ class SidebarItem(QPushButton):
             QPushButton {{
                 background-color: transparent;
                 border: none;
-                border-radius: 6px;
+                border-radius: 8px;
                 color: {TEXT_BODY};
-                font-size: 13px;
+                font-size: 14px;
                 text-align: left;
                 padding-left: 16px;
             }}
             QPushButton:hover {{
-                background-color: #f0f6ff;
+                background-color: {ACCENT_BG};
             }}
             QPushButton:checked {{
-                background-color: #e8f0fe;
+                background-color: {ACCENT_ACTIVE_BG};
                 color: {ACCENT};
                 font-weight: 600;
             }}
@@ -48,7 +48,7 @@ class Sidebar(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFixedWidth(200)
+        self.setFixedWidth(220)
         self.setObjectName('Sidebar')
         self.setStyleSheet(f"""
             #Sidebar {{
@@ -66,8 +66,28 @@ class Sidebar(QWidget):
 
     def _setup_ui(self):
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setContentsMargins(12, 0, 12, 12)
         layout.setSpacing(4)
+
+        # 앱 브랜딩
+        brand = QLabel('Robot Studio')
+        brand.setStyleSheet(f"""
+            QLabel {{
+                color: {ACCENT};
+                font-size: 15px;
+                font-weight: 700;
+                letter-spacing: -0.3px;
+                padding: 22px 4px 18px 4px;
+                background-color: transparent;
+                border: none;
+            }}
+        """)
+        layout.addWidget(brand)
+
+        sep_top = QFrame()
+        sep_top.setFrameShape(QFrame.Shape.HLine)
+        sep_top.setStyleSheet(f"background-color: {BORDER}; border: none; max-height: 1px;")
+        layout.addWidget(sep_top)
 
         header = QLabel('MENU')
         header.setStyleSheet(f"""
@@ -76,7 +96,7 @@ class Sidebar(QWidget):
                 font-size: 10px;
                 font-weight: 700;
                 letter-spacing: 1.5px;
-                padding: 8px 8px 12px 8px;
+                padding: 12px 4px 8px 4px;
                 background-color: transparent;
                 border: none;
             }}
@@ -117,9 +137,9 @@ class Sidebar(QWidget):
             QPushButton {{
                 background-color: transparent;
                 border: none;
-                border-radius: 6px;
+                border-radius: 8px;
                 color: {ACCENT_RED};
-                font-size: 13px;
+                font-size: 14px;
                 text-align: left;
                 padding-left: 16px;
             }}
