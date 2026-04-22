@@ -4,10 +4,10 @@ from pathlib import Path
 import serial.tools.list_ports
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QGroupBox, QComboBox, QScrollArea, QFrame, QStackedWidget, QMessageBox,
+    QGroupBox, QComboBox, QGridLayout, QFrame, QStackedWidget, QMessageBox,
 )
-from PySide6.QtCore import Qt, Signal, QObject, QPoint
-from PySide6.QtGui import QPainter, QColor, QPen, QFont, QPolygon, QPixmap
+from PySide6.QtCore import Qt, Signal, QObject
+from PySide6.QtGui import QPainter, QColor, QPen, QFont, QPolygon, QPoint, QPixmap
 
 import rclpy
 from rclpy.executors import MultiThreadedExecutor
@@ -15,44 +15,23 @@ from rclpy.node import Node
 from sensor_msgs.msg import JointState
 from std_msgs.msg import String
 
+from .theme import (
+    BG_PAGE, BG_CARD, TEXT_H1, TEXT_BODY, TEXT_MUTED, TEXT_DISABLED,
+    ACCENT, ACCENT_GREEN, ACCENT_RED, BORDER,
+    btn_primary, btn_success, btn_ghost, btn_back, btn_icon_sm,
+    groupbox_style, combobox_style, messagebox_style,
+)
+
 JOINT_NAMES = ['shoulder_pan', 'shoulder_lift', 'elbow_flex', 'wrist_flex', 'wrist_roll', 'gripper']
 RESOLUTION = 4096
 HALF_TURN = RESOLUTION // 2
 
 ASSETS_DIR = Path(__file__).parent.parent / 'assets' / 'calibration'
 
-_BTN_PRIMARY = """
-    QPushButton {
-        background-color: #0e639c; color: white;
-        border: none; border-radius: 4px; padding: 8px 20px;
-        font-weight: 600; font-size: 13px;
-    }
-    QPushButton:hover { background-color: #1177bb; }
-    QPushButton:disabled { background-color: #2a2a2a; color: #555; }
-"""
-_BTN_GREEN = """
-    QPushButton {
-        background-color: #16825d; color: white;
-        border: none; border-radius: 4px; padding: 8px 20px;
-        font-weight: 600; font-size: 13px;
-    }
-    QPushButton:hover { background-color: #1a9a6e; }
-    QPushButton:disabled { background-color: #2a2a2a; color: #555; }
-"""
-_BTN_GHOST = """
-    QPushButton {
-        background-color: #3c3c3c; color: #ccc;
-        border: 1px solid #555; border-radius: 4px; padding: 8px 20px;
-    }
-    QPushButton:hover { background-color: #505050; }
-"""
-_BTN_BACK = """
-    QPushButton {
-        background-color: transparent; color: #666;
-        border: none; padding: 8px 4px; font-size: 12px;
-    }
-    QPushButton:hover { color: #aaa; }
-"""
+_BTN_PRIMARY = btn_primary()
+_BTN_GREEN   = btn_success()
+_BTN_GHOST   = btn_ghost()
+_BTN_BACK    = btn_back()
 
 
 # ─── ROS2 → Qt 시그널 ────────────────────────────────────────────────────────
@@ -117,7 +96,7 @@ class JointRangeSlider(QWidget):
         self.pos_v = HALF_TURN
         self.tick_v = HALF_TURN
         self.setMinimumHeight(60)
-        self.setFixedHeight(70)
+        self.setFixedHeight(80)
 
     def set_range(self, min_val: int, max_val: int, pos_val: int):
         self.min_v = max(0, min(RESOLUTION - 1, min_val))
@@ -134,8 +113,11 @@ class JointRangeSlider(QWidget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         w, h = self.width(), self.height()
 
-        margin = 60
-        bar_y = h // 2
+        # 카드 배경
+        painter.fillRect(self.rect(), QColor(255, 255, 255))
+
+        margin = 56
+        bar_y = h // 2 + 4
         bar_w = w - margin * 2
         bar_h = 8
         x0 = margin
@@ -145,28 +127,28 @@ class JointRangeSlider(QWidget):
 
         # 배경 바 (빨간색)
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(QColor(200, 60, 60))
-        painter.drawRect(x0, bar_y - bar_h // 2, bar_w, bar_h)
+        painter.setBrush(QColor(239, 68, 68))
+        painter.drawRoundedRect(x0, bar_y - bar_h // 2, bar_w, bar_h, 4, 4)
 
-        # 활성 구간 (녹색) — min=max일 때는 0 너비
+        # 활성 구간 (초록)
         active_x = int(val_to_x(self.min_v))
         active_w = int(val_to_x(self.max_v) - val_to_x(self.min_v))
         if active_w > 0:
-            painter.setBrush(QColor(60, 200, 60))
-            painter.drawRect(active_x, bar_y - bar_h // 2, active_w, bar_h)
+            painter.setBrush(QColor(34, 197, 94))
+            painter.drawRoundedRect(active_x, bar_y - bar_h // 2, active_w, bar_h, 4, 4)
 
-        # min/max 핸들 (흰색 세로선)
-        painter.setPen(QPen(QColor(240, 240, 240), 2))
+        # min/max 핸들 (어두운 세로선)
+        painter.setPen(QPen(QColor(55, 65, 81), 2))
         for x in [val_to_x(self.min_v), val_to_x(self.max_v)]:
             painter.drawLine(int(x), bar_y - 10, int(x), bar_y + 10)
 
-        # 현재 위치 tick (노란색 세로선)
-        painter.setPen(QPen(QColor(250, 220, 40), 2))
+        # 현재 위치 tick (황색 세로선)
+        painter.setPen(QPen(QColor(234, 179, 8), 2))
         tx = int(val_to_x(self.tick_v))
         painter.drawLine(tx, bar_y - 12, tx, bar_y + 12)
 
-        # 삼각형 (pos_v)
-        painter.setBrush(QColor(240, 240, 240))
+        # 삼각형 (pos_v) — 슬레이트색
+        painter.setBrush(QColor(71, 85, 105))
         painter.setPen(Qt.PenStyle.NoPen)
         px = int(val_to_x(self.pos_v))
         tri = QPolygon([
@@ -177,20 +159,21 @@ class JointRangeSlider(QWidget):
         painter.drawPolygon(tri)
 
         # 숫자 라벨
-        painter.setPen(QColor(200, 200, 200))
-        font = QFont('monospace', 9)
+        painter.setPen(QColor(71, 85, 105))
+        font = QFont('monospace', 8)
         painter.setFont(font)
-        painter.drawText(int(val_to_x(self.min_v)) - 15, bar_y - 28, 30, 12,
+        painter.drawText(int(val_to_x(self.min_v)) - 15, bar_y - 30, 30, 12,
                          Qt.AlignmentFlag.AlignCenter, str(self.min_v))
-        painter.drawText(int(val_to_x(self.max_v)) - 15, bar_y - 28, 30, 12,
+        painter.drawText(int(val_to_x(self.max_v)) - 15, bar_y - 30, 30, 12,
                          Qt.AlignmentFlag.AlignCenter, str(self.max_v))
-        painter.drawText(px - 20, bar_y - 32, 40, 12,
+        painter.drawText(px - 20, bar_y - 34, 40, 12,
                          Qt.AlignmentFlag.AlignCenter, str(self.pos_v))
 
         # 관절 이름
-        painter.setPen(QColor(180, 180, 180))
+        painter.setPen(QColor(51, 65, 85))
         painter.setFont(QFont('sans-serif', 10, QFont.Weight.Bold))
-        painter.drawText(4, 16, 100, 16, Qt.AlignmentFlag.AlignLeft, self.joint_name)
+        painter.drawText(8, 6, w - 16, 18, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                         self.joint_name)
 
         painter.end()
 
@@ -225,19 +208,19 @@ class CalibrationPanel(QWidget):
 
     def _make_instruction_card(self, title: str, desc: str) -> QFrame:
         card = QFrame()
-        card.setStyleSheet('QFrame { background: #1a2d3d; border-radius: 8px; }')
+        card.setStyleSheet(f'QFrame {{ background: #eff6ff; border-radius: 8px; border: 1px solid #bfdbfe; }}')
         layout = QVBoxLayout(card)
         layout.setSpacing(4)
         layout.setContentsMargins(12, 10, 12, 10)
 
         title_lbl = QLabel(title)
         title_lbl.setStyleSheet(
-            'color: #9cdcfe; font-size: 13px; font-weight: 600; background: transparent;'
+            'color: #1d4ed8; font-size: 13px; font-weight: 600; background: transparent; border: none;'
         )
         layout.addWidget(title_lbl)
 
         desc_lbl = QLabel(desc)
-        desc_lbl.setStyleSheet('color: #aaaaaa; font-size: 12px; background: transparent;')
+        desc_lbl.setStyleSheet(f'color: {TEXT_BODY}; font-size: 12px; background: transparent; border: none;')
         desc_lbl.setWordWrap(True)
         layout.addWidget(desc_lbl)
 
@@ -255,12 +238,12 @@ class CalibrationPanel(QWidget):
                 Qt.AspectRatioMode.KeepAspectRatio,
                 Qt.TransformationMode.SmoothTransformation,
             ))
-            label.setStyleSheet('background: #1a1a1a; border-radius: 6px;')
+            label.setStyleSheet(f'background: #f3f4f6; border-radius: 6px; border: 1px solid {BORDER};')
         else:
             label.setText(fallback_text)
             label.setStyleSheet(
-                'background: #2a2a2a; border-radius: 6px; color: #555; font-size: 12px; '
-                'border: 1px dashed #444;'
+                f'background: #f3f4f6; border-radius: 6px; color: {TEXT_DISABLED}; font-size: 12px; '
+                f'border: 1px dashed {BORDER};'
             )
             label.setWordWrap(True)
         return label
@@ -269,18 +252,17 @@ class CalibrationPanel(QWidget):
 
     def _setup_ui(self):
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(16, 16, 16, 16)
-        main_layout.setSpacing(10)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(12)
 
         title = QLabel('Robot Calibration')
-        title.setStyleSheet('color: #ffffff; font-size: 18px; font-weight: 600;')
+        title.setStyleSheet(f'color: {TEXT_H1}; font-size: 20px; font-weight: 700; background: transparent;')
         main_layout.addWidget(title)
 
         main_layout.addWidget(self._build_step_indicator())
 
-        # 상태 메시지 (백엔드에서 오는 메시지 표시)
         self._status_bar = QLabel('')
-        self._status_bar.setStyleSheet('color: #858585; font-size: 11px; padding: 2px 4px;')
+        self._status_bar.setStyleSheet(f'color: {TEXT_MUTED}; font-size: 11px; padding: 2px 4px; background: transparent;')
         self._status_bar.setWordWrap(True)
         main_layout.addWidget(self._status_bar)
 
@@ -305,7 +287,7 @@ class CalibrationPanel(QWidget):
         for i, text in enumerate(steps):
             lbl = QLabel(text)
             lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            lbl.setFixedHeight(28)
+            lbl.setFixedHeight(30)
             lbl.setContentsMargins(4, 0, 4, 0)
             self._step_labels.append(lbl)
             layout.addWidget(lbl, 2)
@@ -313,7 +295,7 @@ class CalibrationPanel(QWidget):
             if i < len(steps) - 1:
                 sep = QLabel('›')
                 sep.setAlignment(Qt.AlignmentFlag.AlignCenter)
-                sep.setStyleSheet('color: #444; font-size: 16px;')
+                sep.setStyleSheet(f'color: {BORDER}; font-size: 16px; background: transparent;')
                 sep.setFixedWidth(20)
                 layout.addWidget(sep)
 
@@ -323,16 +305,16 @@ class CalibrationPanel(QWidget):
         for i, lbl in enumerate(self._step_labels):
             if i < self._current_step:
                 lbl.setStyleSheet(
-                    'color: #4ec9b0; font-size: 12px; background: transparent; padding: 2px 4px;'
+                    f'color: {ACCENT_GREEN}; font-size: 12px; background: transparent; padding: 2px 4px;'
                 )
             elif i == self._current_step:
                 lbl.setStyleSheet(
-                    'color: #ffffff; font-size: 12px; font-weight: 700; '
-                    'background: #1a2d3d; border-radius: 4px; padding: 2px 4px;'
+                    f'color: white; font-size: 12px; font-weight: 700; '
+                    f'background: {ACCENT}; border-radius: 6px; padding: 2px 4px;'
                 )
             else:
                 lbl.setStyleSheet(
-                    'color: #555; font-size: 12px; background: transparent; padding: 2px 4px;'
+                    f'color: {TEXT_DISABLED}; font-size: 12px; background: transparent; padding: 2px 4px;'
                 )
 
     def _go_to_step(self, step: int):
@@ -354,42 +336,38 @@ class CalibrationPanel(QWidget):
         ))
 
         conn_group = QGroupBox('Connection')
-        conn_group.setStyleSheet("""
-            QGroupBox {
-                color: #cccccc; font-size: 12px; font-weight: 600;
-                border: 1px solid #3c3c3c; border-radius: 6px;
-                margin-top: 6px; padding-top: 6px;
-            }
-            QGroupBox::title { subcontrol-origin: margin; left: 8px; padding: 0 4px; }
-        """)
+        conn_group.setStyleSheet(groupbox_style())
         conn_layout = QHBoxLayout(conn_group)
         conn_layout.setSpacing(8)
+        conn_layout.setContentsMargins(12, 18, 12, 12)
 
         self._port_combo = QComboBox()
         self._port_combo.setMinimumWidth(160)
-        conn_layout.addWidget(QLabel('Port:'))
+        self._port_combo.setStyleSheet(combobox_style())
+
+        port_lbl = QLabel('Port:')
+        port_lbl.setStyleSheet(f'color: {TEXT_MUTED}; font-size: 12px; background: transparent; border: none;')
+        conn_layout.addWidget(port_lbl)
         conn_layout.addWidget(self._port_combo)
 
         refresh_btn = QPushButton('↺')
-        refresh_btn.setFixedSize(28, 28)
-        refresh_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #3c3c3c; border: 1px solid #555;
-                border-radius: 3px; color: #cccccc; font-size: 14px;
-            }
-            QPushButton:hover { background-color: #505050; }
-        """)
+        refresh_btn.setFixedSize(30, 30)
+        refresh_btn.setStyleSheet(btn_icon_sm())
         refresh_btn.clicked.connect(self._refresh_ports)
         conn_layout.addWidget(refresh_btn)
 
-        conn_layout.addWidget(QLabel('Arm:'))
+        arm_lbl = QLabel('Arm:')
+        arm_lbl.setStyleSheet(f'color: {TEXT_MUTED}; font-size: 12px; background: transparent; border: none;')
+        conn_layout.addWidget(arm_lbl)
+
         self._role_combo = QComboBox()
         self._role_combo.addItems(['follower', 'leader'])
         self._role_combo.setFixedWidth(100)
+        self._role_combo.setStyleSheet(combobox_style())
         conn_layout.addWidget(self._role_combo)
 
         self._connect_btn = QPushButton('Connect')
-        self._connect_btn.setFixedHeight(32)
+        self._connect_btn.setFixedHeight(34)
         self._connect_btn.setStyleSheet(_BTN_PRIMARY)
         self._connect_btn.clicked.connect(self._on_connect)
         conn_layout.addWidget(self._connect_btn)
@@ -446,26 +424,24 @@ class CalibrationPanel(QWidget):
         ))
 
         layout.addWidget(
-            self._make_image_label('explore.jpg', '📷  참고 사진 준비 중\n관절을 끝까지 돌리는 모습', height=120)
+            self._make_image_label('explore.jpg', '📷  참고 사진 준비 중\n관절을 끝까지 돌리는 모습', height=100)
         )
 
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setStyleSheet('QScrollArea { border: none; background: transparent; }')
+        # 3열 그리드 — 스크롤 없이 한 화면에 표시
+        grid_widget = QWidget()
+        grid_widget.setStyleSheet('background: transparent;')
+        grid_layout = QGridLayout(grid_widget)
+        grid_layout.setSpacing(8)
+        grid_layout.setContentsMargins(0, 4, 0, 4)
 
-        sliders_widget = QWidget()
-        sliders_layout = QVBoxLayout(sliders_widget)
-        sliders_layout.setSpacing(4)
-        sliders_layout.setContentsMargins(4, 4, 4, 4)
-
-        for name in JOINT_NAMES:
+        for i, name in enumerate(JOINT_NAMES):
             slider = JointRangeSlider(name)
             self._sliders[name] = slider
-            sliders_layout.addWidget(slider)
+            row, col = divmod(i, 3)
+            grid_layout.addWidget(slider, row, col)
 
-        sliders_layout.addStretch()
-        scroll.setWidget(sliders_widget)
-        layout.addWidget(scroll, 1)
+        layout.addWidget(grid_widget)
+        layout.addStretch()
 
         bottom = QHBoxLayout()
         back_btn = QPushButton('← 돌아가기')
@@ -537,16 +513,7 @@ class CalibrationPanel(QWidget):
                 '\n\n각 관절을 최소·최대 위치까지 움직인 뒤 저장해 주세요.'
             )
             dlg.setStandardButtons(QMessageBox.StandardButton.Ok)
-            dlg.setStyleSheet("""
-                QMessageBox { background-color: #1e1e1e; color: #cccccc; }
-                QLabel { color: #cccccc; font-size: 13px; }
-                QPushButton {
-                    background-color: #0e639c; color: white;
-                    border: none; border-radius: 4px; padding: 6px 20px;
-                    font-weight: 600; min-width: 80px;
-                }
-                QPushButton:hover { background-color: #1177bb; }
-            """)
+            dlg.setStyleSheet(messagebox_style())
             dlg.exec()
             return
         if self._ui_node:
@@ -555,7 +522,6 @@ class CalibrationPanel(QWidget):
     def _on_back_to_connect(self):
         if self._ui_node:
             self._ui_node.send_command('disconnect')
-        # 'idle' 상태 수신 시 _on_status가 자동으로 step 0으로 이동
 
     def _on_back_to_center(self):
         self._go_to_step(1)
@@ -567,12 +533,14 @@ class CalibrationPanel(QWidget):
 
         if status == 'error':
             self._status_bar.setStyleSheet(
-                'color: #f48771; font-size: 11px; padding: 2px 4px;'
+                f'color: {ACCENT_RED}; font-size: 11px; padding: 2px 4px; background: transparent;'
             )
             self._status_bar.setText(message)
             return
 
-        self._status_bar.setStyleSheet('color: #858585; font-size: 11px; padding: 2px 4px;')
+        self._status_bar.setStyleSheet(
+            f'color: {TEXT_MUTED}; font-size: 11px; padding: 2px 4px; background: transparent;'
+        )
         self._status_bar.setText(message)
 
         if status == 'connected':
@@ -582,27 +550,19 @@ class CalibrationPanel(QWidget):
             self._connected = False
             self._go_to_step(0)
         elif status == 'homing_set':
-            # 슬라이더 초기화 (중앙값부터 추적 시작)
             for slider in self._sliders.values():
                 slider.set_range(HALF_TURN, HALF_TURN, HALF_TURN)
             self._go_to_step(2)
         elif status == 'saved':
-            self._status_bar.setStyleSheet('color: #4ec9b0; font-size: 11px; padding: 2px 4px;')
+            self._status_bar.setStyleSheet(
+                f'color: {ACCENT_GREEN}; font-size: 11px; padding: 2px 4px; background: transparent;'
+            )
             file_path = data.get('file_path', '')
             dlg = QMessageBox(self)
             dlg.setWindowTitle('캘리브레이션 저장 완료')
             dlg.setText(f'캘리브레이션이 저장되었습니다\n{file_path}')
             dlg.setStandardButtons(QMessageBox.StandardButton.Ok)
-            dlg.setStyleSheet("""
-                QMessageBox { background-color: #1e1e1e; color: #cccccc; }
-                QLabel { color: #cccccc; font-size: 13px; }
-                QPushButton {
-                    background-color: #0e639c; color: white;
-                    border: none; border-radius: 4px; padding: 6px 20px;
-                    font-weight: 600; min-width: 80px;
-                }
-                QPushButton:hover { background-color: #1177bb; }
-            """)
+            dlg.setStyleSheet(messagebox_style())
             dlg.exec()
             self._go_to_step(0)
 

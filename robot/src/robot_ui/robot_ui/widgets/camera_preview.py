@@ -14,25 +14,31 @@ import cv2
 import numpy as np
 
 from ..utils import ImageSignal, CameraSubscriberNode
+from .theme import (
+    BG_CARD, BORDER, TEXT_H1, TEXT_MUTED, TEXT_DISABLED,
+    btn_primary, scrollbar_style,
+)
 
 
 class CameraPreviewWidget(QFrame):
     """개별 카메라 프리뷰 위젯"""
 
-    clicked = Signal(str)  # topic_name 전달
+    clicked = Signal(str)
 
     def __init__(self, topic_name: str, parent=None):
         super().__init__(parent)
         self.topic_name = topic_name
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setStyleSheet("""
-            QFrame {
-                background-color: #2d2d2d;
-                border-radius: 8px;
-            }
-            QFrame:hover {
-                background-color: #3d3d3d;
-            }
+        self.setStyleSheet(f"""
+            QFrame {{
+                background-color: {BG_CARD};
+                border: 1px solid {BORDER};
+                border-radius: 12px;
+            }}
+            QFrame:hover {{
+                background-color: #f0f6ff;
+                border-color: #93c5fd;
+            }}
         """)
         self.setMinimumSize(400, 300)
 
@@ -47,36 +53,35 @@ class CameraPreviewWidget(QFrame):
         layout.setContentsMargins(12, 12, 12, 12)
         layout.setSpacing(8)
 
-        # 토픽 이름 라벨
         self.name_label = QLabel(self.topic_name)
-        self.name_label.setStyleSheet("""
-            QLabel {
-                color: #ffffff;
+        self.name_label.setStyleSheet(f"""
+            QLabel {{
+                color: {TEXT_H1};
                 font-size: 12px;
                 font-weight: 600;
                 background-color: transparent;
-            }
+                border: none;
+            }}
         """)
         layout.addWidget(self.name_label)
 
-        # 이미지 표시 라벨
         self.image_label = QLabel()
         self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.image_label.setStyleSheet("""
-            QLabel {
-                background-color: #1e1e1e;
-                border-radius: 4px;
-            }
+        self.image_label.setStyleSheet(f"""
+            QLabel {{
+                background-color: #f3f4f6;
+                border-radius: 6px;
+                border: none;
+                color: {TEXT_DISABLED};
+            }}
         """)
         self.image_label.setText('Waiting for image...')
         layout.addWidget(self.image_label, 1)
 
     def update_image(self, cv_image: np.ndarray):
-        """OpenCV 이미지를 QLabel에 표시"""
         label_size = self.image_label.size()
         h, w = cv_image.shape[:2]
 
-        # 라벨 크기에 맞게 스케일 계산
         scale = min(label_size.width() / w, label_size.height() / h)
         if scale > 0:
             new_w, new_h = int(w * scale), int(h * scale)
@@ -84,10 +89,8 @@ class CameraPreviewWidget(QFrame):
         else:
             resized = cv_image
 
-        # BGR to RGB
         rgb_image = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
 
-        # numpy array to QImage
         h, w, ch = rgb_image.shape
         bytes_per_line = ch * w
         q_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format.Format_RGB888)
@@ -99,8 +102,8 @@ class CameraPreviewWidget(QFrame):
 class CameraPreviewArea(QWidget):
     """메인 영역의 카메라 프리뷰 그리드"""
 
-    camera_selected = Signal(str)   # topic_name 전달
-    topics_updated  = Signal(list)  # 사용 가능한 topic 목록 전달
+    camera_selected = Signal(str)
+    topics_updated  = Signal(list)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -117,72 +120,38 @@ class CameraPreviewArea(QWidget):
 
     def _setup_ui(self):
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(16)
 
-        # 헤더
         header_layout = QHBoxLayout()
 
         title = QLabel('Camera Preview')
-        title.setStyleSheet("""
-            QLabel {
-                color: #ffffff;
-                font-size: 18px;
-                font-weight: 600;
-            }
+        title.setStyleSheet(f"""
+            QLabel {{
+                color: {TEXT_H1};
+                font-size: 20px;
+                font-weight: 700;
+                background: transparent;
+            }}
         """)
         header_layout.addWidget(title)
-
         header_layout.addStretch()
 
-        # 리프레시 버튼
         self.refresh_btn = QPushButton('Refresh Topics')
-        self.refresh_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #0e639c;
-                color: white;
-                border: none;
-                padding: 8px 16px;
-                border-radius: 4px;
-                font-size: 12px;
-            }
-            QPushButton:hover {
-                background-color: #1177bb;
-            }
-        """)
+        self.refresh_btn.setStyleSheet(btn_primary())
         self.refresh_btn.clicked.connect(self._refresh_topics)
         header_layout.addWidget(self.refresh_btn)
 
         layout.addLayout(header_layout)
 
-        # 상태 라벨
         self.status_label = QLabel('Initializing ROS2...')
-        self.status_label.setStyleSheet("color: #858585; font-size: 12px;")
+        self.status_label.setStyleSheet(f"color: {TEXT_MUTED}; font-size: 12px; background: transparent;")
         layout.addWidget(self.status_label)
 
-        # 스크롤 영역
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
-        scroll_area.setStyleSheet("""
-            QScrollArea {
-                border: none;
-                background-color: transparent;
-            }
-            QScrollBar:vertical {
-                background-color: #1e1e1e;
-                width: 12px;
-            }
-            QScrollBar::handle:vertical {
-                background-color: #424242;
-                border-radius: 6px;
-                min-height: 20px;
-            }
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-                height: 0px;
-            }
-        """)
+        scroll_area.setStyleSheet(scrollbar_style())
 
-        # 프리뷰 그리드 컨테이너
         self.grid_container = QWidget()
         self.grid_container.setStyleSheet("background-color: transparent;")
         self.grid_layout = QGridLayout(self.grid_container)
@@ -222,12 +191,10 @@ class CameraPreviewArea(QWidget):
         topics = self.ros_node.get_available_image_topics()
         self.status_label.setText(f'Found {len(topics)} camera(s)')
 
-        # 새 토픽 추가
         for topic in topics:
             if topic not in self.preview_widgets:
                 self._add_preview(topic)
 
-        # 없어진 토픽 제거
         for topic in list(self.preview_widgets.keys()):
             if topic not in topics:
                 self._remove_preview(topic)
@@ -256,12 +223,9 @@ class CameraPreviewArea(QWidget):
                 self.ros_node.unsubscribe_from_topic(topic_name)
 
     def _update_grid_layout(self):
-        """프리뷰 위젯들을 그리드에 배치 (2열)"""
-        # 기존 위젯 제거
         for i in reversed(range(self.grid_layout.count())):
             self.grid_layout.itemAt(i).widget().setParent(None)
 
-        # 2열 그리드로 배치
         for idx, (topic, widget) in enumerate(self.preview_widgets.items()):
             row = idx // 2
             col = idx % 2
