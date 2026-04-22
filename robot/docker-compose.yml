@@ -12,3 +12,4 @@ services:
       - /dev:/dev
       - ./src:/root/robot/src
       - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority:ro
+      - ~/.cache/huggingface/lerobot:/root/.cache/huggingface/lerobot
