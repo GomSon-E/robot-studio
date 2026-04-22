@@ -46,3 +46,16 @@ ros2_ws/log/
 
 # Note
 *.md
+
+# Node.js / Web
+node_modules/
+web/dist/
+web/tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# Vite
+web/.vite/
+
+# Tool artifacts
+.playwright-mcp/
+.superpowers/
