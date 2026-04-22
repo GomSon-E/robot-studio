@@ -35,6 +35,15 @@ def launch_setup(_context):
 
     nodes.append(
         Node(
+            package='robot_driver',
+            executable='calibration_node',
+            name='calibration_node',
+            output='screen'
+        )
+    )
+
+    nodes.append(
+        Node(
             package='robot_ui',
             executable='ui',
             name='robot_ui',
