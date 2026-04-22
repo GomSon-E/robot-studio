@@ -125,30 +125,30 @@ class JointRangeSlider(QWidget):
         def val_to_x(v):
             return x0 + (v / (RESOLUTION - 1)) * bar_w
 
-        # 배경 바 (빨간색)
+        # 배경 트랙 (중립 회색)
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(QColor(239, 68, 68))
+        painter.setBrush(QColor(226, 229, 236))
         painter.drawRoundedRect(x0, bar_y - bar_h // 2, bar_w, bar_h, 4, 4)
 
-        # 활성 구간 (초록)
+        # 캘리브레이션 구간 (퍼플)
         active_x = int(val_to_x(self.min_v))
         active_w = int(val_to_x(self.max_v) - val_to_x(self.min_v))
         if active_w > 0:
-            painter.setBrush(QColor(34, 197, 94))
+            painter.setBrush(QColor(196, 181, 253))
             painter.drawRoundedRect(active_x, bar_y - bar_h // 2, active_w, bar_h, 4, 4)
 
-        # min/max 핸들 (어두운 세로선)
-        painter.setPen(QPen(QColor(55, 65, 81), 2))
+        # min/max 핸들
+        painter.setPen(QPen(QColor(71, 85, 105), 2))
         for x in [val_to_x(self.min_v), val_to_x(self.max_v)]:
             painter.drawLine(int(x), bar_y - 10, int(x), bar_y + 10)
 
-        # 현재 위치 tick (황색 세로선)
-        painter.setPen(QPen(QColor(234, 179, 8), 2))
+        # 현재 위치 tick (중간 회색)
+        painter.setPen(QPen(QColor(148, 163, 184), 2))
         tx = int(val_to_x(self.tick_v))
         painter.drawLine(tx, bar_y - 12, tx, bar_y + 12)
 
-        # 삼각형 (pos_v) — 슬레이트색
-        painter.setBrush(QColor(71, 85, 105))
+        # 삼각형 (live pos) — 퍼플
+        painter.setBrush(QColor(124, 58, 237))
         painter.setPen(Qt.PenStyle.NoPen)
         px = int(val_to_x(self.pos_v))
         tri = QPolygon([
@@ -159,8 +159,8 @@ class JointRangeSlider(QWidget):
         painter.drawPolygon(tri)
 
         # 숫자 라벨
-        painter.setPen(QColor(71, 85, 105))
-        font = QFont('monospace', 8)
+        painter.setPen(QColor(100, 116, 139))
+        font = QFont('monospace', 9)
         painter.setFont(font)
         painter.drawText(int(val_to_x(self.min_v)) - 15, bar_y - 30, 30, 12,
                          Qt.AlignmentFlag.AlignCenter, str(self.min_v))
@@ -170,8 +170,8 @@ class JointRangeSlider(QWidget):
                          Qt.AlignmentFlag.AlignCenter, str(self.pos_v))
 
         # 관절 이름
-        painter.setPen(QColor(51, 65, 85))
-        painter.setFont(QFont('sans-serif', 10, QFont.Weight.Bold))
+        painter.setPen(QColor(26, 29, 46))
+        painter.setFont(QFont('sans-serif', 11, QFont.Weight.Bold))
         painter.drawText(8, 6, w - 16, 18, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
                          self.joint_name)
 
@@ -215,12 +215,12 @@ class CalibrationPanel(QWidget):
 
         title_lbl = QLabel(title)
         title_lbl.setStyleSheet(
-            'color: #5b21b6; font-size: 13px; font-weight: 600; background: transparent; border: none;'
+            'color: #5b21b6; font-size: 14px; font-weight: 600; background: transparent; border: none;'
         )
         layout.addWidget(title_lbl)
 
         desc_lbl = QLabel(desc)
-        desc_lbl.setStyleSheet(f'color: {TEXT_BODY}; font-size: 12px; background: transparent; border: none;')
+        desc_lbl.setStyleSheet(f'color: {TEXT_BODY}; font-size: 13px; background: transparent; border: none;')
         desc_lbl.setWordWrap(True)
         layout.addWidget(desc_lbl)
 
@@ -242,7 +242,7 @@ class CalibrationPanel(QWidget):
         else:
             label.setText(fallback_text)
             label.setStyleSheet(
-                f'background: #f3f4f6; border-radius: 6px; color: {TEXT_DISABLED}; font-size: 12px; '
+                f'background: #f3f4f6; border-radius: 6px; color: {TEXT_DISABLED}; font-size: 13px; '
                 f'border: 1px dashed {BORDER};'
             )
             label.setWordWrap(True)
@@ -256,13 +256,13 @@ class CalibrationPanel(QWidget):
         main_layout.setSpacing(12)
 
         title = QLabel('Robot Calibration')
-        title.setStyleSheet(f'color: {TEXT_H1}; font-size: 20px; font-weight: 700; background: transparent;')
+        title.setStyleSheet(f'color: {TEXT_H1}; font-size: 22px; font-weight: 700; background: transparent;')
         main_layout.addWidget(title)
 
         main_layout.addWidget(self._build_step_indicator())
 
         self._status_bar = QLabel('')
-        self._status_bar.setStyleSheet(f'color: {TEXT_MUTED}; font-size: 11px; padding: 2px 4px; background: transparent;')
+        self._status_bar.setStyleSheet(f'color: {TEXT_MUTED}; font-size: 12px; padding: 2px 4px; background: transparent;')
         self._status_bar.setWordWrap(True)
         main_layout.addWidget(self._status_bar)
 
@@ -346,7 +346,7 @@ class CalibrationPanel(QWidget):
         self._port_combo.setStyleSheet(combobox_style())
 
         port_lbl = QLabel('Port:')
-        port_lbl.setStyleSheet(f'color: {TEXT_MUTED}; font-size: 12px; background: transparent; border: none;')
+        port_lbl.setStyleSheet(f'color: {TEXT_MUTED}; font-size: 13px; background: transparent; border: none;')
         conn_layout.addWidget(port_lbl)
         conn_layout.addWidget(self._port_combo)
 
@@ -533,13 +533,13 @@ class CalibrationPanel(QWidget):
 
         if status == 'error':
             self._status_bar.setStyleSheet(
-                f'color: {ACCENT_RED}; font-size: 11px; padding: 2px 4px; background: transparent;'
+                f'color: {ACCENT_RED}; font-size: 12px; padding: 2px 4px; background: transparent;'
             )
             self._status_bar.setText(message)
             return
 
         self._status_bar.setStyleSheet(
-            f'color: {TEXT_MUTED}; font-size: 11px; padding: 2px 4px; background: transparent;'
+            f'color: {TEXT_MUTED}; font-size: 12px; padding: 2px 4px; background: transparent;'
         )
         self._status_bar.setText(message)
 
@@ -555,7 +555,7 @@ class CalibrationPanel(QWidget):
             self._go_to_step(2)
         elif status == 'saved':
             self._status_bar.setStyleSheet(
-                f'color: {ACCENT_GREEN}; font-size: 11px; padding: 2px 4px; background: transparent;'
+                f'color: {ACCENT_GREEN}; font-size: 12px; padding: 2px 4px; background: transparent;'
             )
             file_path = data.get('file_path', '')
             dlg = QMessageBox(self)

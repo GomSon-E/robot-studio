@@ -1,12 +1,36 @@
+from pathlib import Path
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QPushButton, QFrame
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame
 )
 from PySide6.QtCore import Signal, Qt
+from PySide6.QtGui import QPixmap, QPainter
 
 from .theme import (
     BG_SIDEBAR, BORDER, TEXT_BODY, TEXT_MUTED, TEXT_DISABLED,
     ACCENT, ACCENT_BG, ACCENT_ACTIVE_BG, ACCENT_RED,
 )
+
+_LOGO_PATH = Path(__file__).parent.parent / 'assets' / 'logo.svg'
+
+
+def _load_logo(size: int = 28) -> QPixmap | None:
+    try:
+        from PySide6.QtSvg import QSvgRenderer
+        renderer = QSvgRenderer(str(_LOGO_PATH))
+        pixmap = QPixmap(size, size)
+        pixmap.fill(Qt.GlobalColor.transparent)
+        p = QPainter(pixmap)
+        renderer.render(p)
+        p.end()
+        return pixmap
+    except Exception:
+        pass
+    # QPixmap direct SVG fallback
+    px = QPixmap(str(_LOGO_PATH))
+    if not px.isNull():
+        return px.scaled(size, size, Qt.AspectRatioMode.KeepAspectRatio,
+                         Qt.TransformationMode.SmoothTransformation)
+    return None
 
 
 class SidebarItem(QPushButton):
@@ -69,20 +93,33 @@ class Sidebar(QWidget):
         layout.setContentsMargins(12, 0, 12, 12)
         layout.setSpacing(4)
 
-        # 앱 브랜딩
-        brand = QLabel('Robot Studio')
-        brand.setStyleSheet(f"""
+        # ── 앱 브랜딩 ──────────────────────────────────────────
+        brand_row = QHBoxLayout()
+        brand_row.setContentsMargins(4, 20, 4, 18)
+        brand_row.setSpacing(8)
+
+        logo_pixmap = _load_logo(28)
+        if logo_pixmap:
+            logo_lbl = QLabel()
+            logo_lbl.setPixmap(logo_pixmap)
+            logo_lbl.setFixedSize(28, 28)
+            logo_lbl.setStyleSheet("background: transparent; border: none;")
+            brand_row.addWidget(logo_lbl)
+
+        brand_text = QLabel('Robot Studio')
+        brand_text.setStyleSheet(f"""
             QLabel {{
                 color: {ACCENT};
                 font-size: 15px;
                 font-weight: 700;
                 letter-spacing: -0.3px;
-                padding: 22px 4px 18px 4px;
                 background-color: transparent;
                 border: none;
             }}
         """)
-        layout.addWidget(brand)
+        brand_row.addWidget(brand_text)
+        brand_row.addStretch()
+        layout.addLayout(brand_row)
 
         sep_top = QFrame()
         sep_top.setFrameShape(QFrame.Shape.HLine)

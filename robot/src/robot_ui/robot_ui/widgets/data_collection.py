@@ -272,7 +272,7 @@ class DataCollectionPanel(QWidget):
         # ── 제목 + 상태 배지 ──────────────────────────────────────────
         header = QHBoxLayout()
         title = QLabel('Data Collection')
-        title.setStyleSheet(f"color: {TEXT_H1}; font-size: 20px; font-weight: 700; background: transparent;")
+        title.setStyleSheet(f"color: {TEXT_H1}; font-size: 22px; font-weight: 700; background: transparent;")
         header.addWidget(title)
         header.addStretch()
         self._phase_label = QLabel('● 대기')

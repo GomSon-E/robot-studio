@@ -103,7 +103,7 @@ class ArmConnectionWidget(QGroupBox):
         layout.addWidget(self._led)
 
         self._status_label = QLabel('대기')
-        self._status_label.setStyleSheet(f'color: {TEXT_MUTED}; font-size: 11px; background: transparent;')
+        self._status_label.setStyleSheet(f'color: {TEXT_MUTED}; font-size: 12px; background: transparent;')
         self._status_label.setFixedWidth(80)
         layout.addWidget(self._status_label)
 
@@ -172,7 +172,7 @@ class JointStateRow(QWidget):
 
         name_label = QLabel(joint_name)
         name_label.setFixedWidth(110)
-        name_label.setStyleSheet(f'color: {TEXT_BODY}; font-size: 12px; background: transparent;')
+        name_label.setStyleSheet(f'color: {TEXT_BODY}; font-size: 13px; background: transparent;')
         layout.addWidget(name_label)
 
         self._leader_bar = QProgressBar()
@@ -186,11 +186,11 @@ class JointStateRow(QWidget):
         self._leader_val = QLabel('2048')
         self._leader_val.setFixedWidth(38)
         self._leader_val.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        self._leader_val.setStyleSheet(f'color: {ACCENT}; font-size: 11px; font-family: monospace; background: transparent;')
+        self._leader_val.setStyleSheet(f'color: {ACCENT}; font-size: 12px; font-family: monospace; background: transparent;')
         layout.addWidget(self._leader_val)
 
         sep = QLabel('→')
-        sep.setStyleSheet(f'color: {TEXT_DISABLED}; font-size: 11px; background: transparent;')
+        sep.setStyleSheet(f'color: {TEXT_DISABLED}; font-size: 12px; background: transparent;')
         layout.addWidget(sep)
 
         self._follower_bar = QProgressBar()
@@ -204,7 +204,7 @@ class JointStateRow(QWidget):
         self._follower_val = QLabel('2048')
         self._follower_val.setFixedWidth(38)
         self._follower_val.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        self._follower_val.setStyleSheet(f'color: {ACCENT_GREEN}; font-size: 11px; font-family: monospace; background: transparent;')
+        self._follower_val.setStyleSheet(f'color: {ACCENT_GREEN}; font-size: 12px; font-family: monospace; background: transparent;')
         layout.addWidget(self._follower_val)
 
     def update_leader(self, value: float):
@@ -250,11 +250,11 @@ class TeleopPanel(QWidget):
         main_layout.setSpacing(16)
 
         title = QLabel('Teleop Control')
-        title.setStyleSheet(f'color: {TEXT_H1}; font-size: 20px; font-weight: 700; background: transparent;')
+        title.setStyleSheet(f'color: {TEXT_H1}; font-size: 22px; font-weight: 700; background: transparent;')
         main_layout.addWidget(title)
 
         subtitle = QLabel('리더 → 팔로워 암  (SO-ARM 101)')
-        subtitle.setStyleSheet(f'color: {TEXT_MUTED}; font-size: 12px; background: transparent;')
+        subtitle.setStyleSheet(f'color: {TEXT_MUTED}; font-size: 13px; background: transparent;')
         main_layout.addWidget(subtitle)
 
         scroll = QScrollArea()
@@ -291,11 +291,11 @@ class TeleopPanel(QWidget):
         legend_layout = QHBoxLayout()
         legend_layout.addSpacing(118)
         leader_legend = QLabel('● 리더')
-        leader_legend.setStyleSheet(f'color: {ACCENT}; font-size: 11px; background: transparent;')
+        leader_legend.setStyleSheet(f'color: {ACCENT}; font-size: 12px; background: transparent;')
         legend_layout.addWidget(leader_legend)
         legend_layout.addStretch()
         follower_legend = QLabel('● 팔로워')
-        follower_legend.setStyleSheet(f'color: {ACCENT_GREEN}; font-size: 11px; background: transparent;')
+        follower_legend.setStyleSheet(f'color: {ACCENT_GREEN}; font-size: 12px; background: transparent;')
         legend_layout.addWidget(follower_legend)
         joint_layout.addLayout(legend_layout)
 

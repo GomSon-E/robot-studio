@@ -42,7 +42,7 @@ class DatasetSettingPanel(QWidget):
         layout.setSpacing(16)
 
         title = QLabel('Dataset Setting')
-        title.setStyleSheet(f"color: {TEXT_H1}; font-size: 20px; font-weight: 700; background: transparent;")
+        title.setStyleSheet(f"color: {TEXT_H1}; font-size: 22px; font-weight: 700; background: transparent;")
         layout.addWidget(title)
 
         separator = QFrame()

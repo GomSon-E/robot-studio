@@ -57,7 +57,7 @@ class CameraPreviewWidget(QFrame):
         self.name_label.setStyleSheet(f"""
             QLabel {{
                 color: {TEXT_H1};
-                font-size: 12px;
+                font-size: 13px;
                 font-weight: 600;
                 background-color: transparent;
                 border: none;
@@ -129,7 +129,7 @@ class CameraPreviewArea(QWidget):
         title.setStyleSheet(f"""
             QLabel {{
                 color: {TEXT_H1};
-                font-size: 20px;
+                font-size: 22px;
                 font-weight: 700;
                 background: transparent;
             }}
@@ -145,7 +145,7 @@ class CameraPreviewArea(QWidget):
         layout.addLayout(header_layout)
 
         self.status_label = QLabel('Initializing ROS2...')
-        self.status_label.setStyleSheet(f"color: {TEXT_MUTED}; font-size: 12px; background: transparent;")
+        self.status_label.setStyleSheet(f"color: {TEXT_MUTED}; font-size: 13px; background: transparent;")
         layout.addWidget(self.status_label)
 
         scroll_area = QScrollArea()
