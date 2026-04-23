@@ -137,7 +137,7 @@ def btn_primary(height: str = '') -> str:
             background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
                 stop:0 {ACCENT}, stop:1 #a78bfa);
             color: white; border: none; border-radius: {RADIUS_MD};
-            padding: 10px 20px; font-weight: 600; font-size: 14px; {h}
+            padding: 10px 20px; font-weight: 600; font-size: 12px; {h}
         }}
         QPushButton:hover {{
             background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
@@ -154,7 +154,7 @@ def btn_success(height: str = '') -> str:
             background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
                 stop:0 {ACCENT_GREEN}, stop:1 {ACCENT_GREEN_END});
             color: white; border: none; border-radius: {RADIUS_MD};
-            padding: 10px 20px; font-weight: 600; font-size: 14px; {h}
+            padding: 10px 20px; font-weight: 600; font-size: 12px; {h}
         }}
         QPushButton:hover {{
             background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
@@ -171,7 +171,7 @@ def btn_danger(height: str = '') -> str:
             background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
                 stop:0 {ACCENT_RED}, stop:1 {ACCENT_RED_END});
             color: white; border: none; border-radius: {RADIUS_MD};
-            padding: 10px 20px; font-weight: 700; font-size: 14px; {h}
+            padding: 10px 20px; font-weight: 700; font-size: 12px; {h}
         }}
         QPushButton:hover {{
             background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
@@ -188,7 +188,7 @@ def btn_warning(height: str = '') -> str:
             background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
                 stop:0 #d97706, stop:1 #f59e0b);
             color: white; border: none; border-radius: {RADIUS_MD};
-            padding: 10px 20px; font-weight: 600; font-size: 14px; {h}
+            padding: 10px 20px; font-weight: 600; font-size: 12px; {h}
         }}
         QPushButton:hover {{
             background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
