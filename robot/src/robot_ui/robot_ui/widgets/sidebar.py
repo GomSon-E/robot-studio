@@ -13,10 +13,10 @@ from .theme import (
 _LOGO_PATH = Path(__file__).parent.parent / 'assets' / 'logo.png'
 
 
-def _load_logo(size: int = 28) -> QPixmap | None:
+def _load_logo(width: int, height: int) -> QPixmap | None:
     px = QPixmap(str(_LOGO_PATH))
     if not px.isNull():
-        return px.scaled(size, size,
+        return px.scaled(width, height,
                          Qt.AspectRatioMode.KeepAspectRatio,
                          Qt.TransformationMode.SmoothTransformation)
     return None
@@ -151,21 +151,19 @@ class Sidebar(QWidget):
         brand_row.setContentsMargins(4, 0, 4, 0)
         brand_row.setSpacing(9)
 
-        logo_pixmap = _load_logo(54)
+        logo_pixmap = _load_logo(166, 48)
         if logo_pixmap:
             logo_lbl = QLabel()
             logo_lbl.setPixmap(logo_pixmap)
-            logo_lbl.setFixedSize(60, 60)
+            logo_lbl.setFixedSize(174, 56)
             logo_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
             logo_lbl.setStyleSheet("""
                 QLabel {
                     background-color: white;
-                    border-radius: 14px;
+                    border-radius: 12px;
                 }
             """)
             brand_row.addWidget(logo_lbl)
-
-        brand_row.addStretch()
         layout.addLayout(brand_row)
 
         layout.addSpacing(16)
