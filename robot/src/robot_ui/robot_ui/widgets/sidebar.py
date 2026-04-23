@@ -1,14 +1,13 @@
 from pathlib import Path
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFrame
 )
 from PySide6.QtCore import Signal, Qt
 from PySide6.QtGui import QPixmap
 
 from .theme import (
-    SIDEBAR_BG, SIDEBAR_BORDER, BORDER, TEXT_BODY, TEXT_MUTED,
-    ACCENT, ACCENT_RED, RADIUS_MD,
-    MENU_ICONS, render_svg_icon,
+    SIDEBAR_BG, SIDEBAR_BORDER,
+    ACCENT, MENU_ICONS, render_svg_icon,
 )
 
 _LOGO_PATH = Path(__file__).parent.parent / 'assets' / 'logo.png'
@@ -210,7 +209,8 @@ class Sidebar(QWidget):
         # ── 구분선 ──────────────────────────────────────────────────────────
         sep = QFrame()
         sep.setFrameShape(QFrame.Shape.HLine)
-        sep.setStyleSheet("background-color: rgba(255,255,255,0.2); max-height: 1px;")
+        sep.setFixedHeight(1)
+        sep.setStyleSheet("background-color: rgba(255,255,255,0.2); border: none;")
         layout.addWidget(sep)
 
         layout.addSpacing(4)
