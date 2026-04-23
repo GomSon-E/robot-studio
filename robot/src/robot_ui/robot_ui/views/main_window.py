@@ -86,6 +86,7 @@ class MainWindow(QMainWindow):
         # 빈 메인 영역 (기본)
         self.empty_area = QWidget()
         self.empty_area.setStyleSheet("background-color: transparent;")
+        self.empty_area.setVisible(False)
         main_layout.addWidget(self.empty_area, 1)
 
         # 카메라 토픽 목록 → DatasetSettingPanel 콤보박스 + DataCollectionPanel 그리드 연결
@@ -97,6 +98,10 @@ class MainWindow(QMainWindow):
 
         self.stacked_widget.addWidget(main_page)  # index 1
         self.stacked_widget.setCurrentIndex(0)
+
+        # 기본 패널: Calibration
+        self.calibration_panel.setVisible(True)
+        self.sidebar._items['calibration'].setChecked(True)
 
     def _on_login_success(self, code: str):
         asyncio.create_task(self._exchange_and_login(code))
@@ -112,6 +117,7 @@ class MainWindow(QMainWindow):
         except Exception as e:
             logger.error(f"Code exchange failed: {e}")
             self.login_webview.reset()
+
 
 
     def _on_topics_updated(self, topics: list):
