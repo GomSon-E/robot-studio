@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { login } from "../api/auth";
+import logo from "../assets/logo.png";
 import "./Auth.css";
 
 export default function Login() {
@@ -34,6 +35,9 @@ export default function Login() {
   return (
     <div className="auth-container">
       <div className="auth-card">
+        <div className="auth-logo">
+          <img src={logo} alt="Robot Studio" />
+        </div>
         <h1>로그인</h1>
         <p className="subtitle">Robot Studio에 오신 것을 환영합니다</p>
         {error && <p className="error-message">{error}</p>}
