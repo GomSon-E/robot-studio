@@ -16,10 +16,11 @@ from sensor_msgs.msg import JointState
 from std_msgs.msg import String
 
 from .theme import (
-    BG_PAGE, BG_CARD, TEXT_H1, TEXT_BODY, TEXT_MUTED, TEXT_DISABLED,
-    ACCENT, ACCENT_GREEN, ACCENT_RED, BORDER,
+    GLASS_BG, GLASS_BORDER, RADIUS_LG, RADIUS_MD,
+    TEXT_H1, TEXT_BODY, TEXT_MUTED, TEXT_DISABLED,
+    ACCENT, ACCENT_GREEN, ACCENT_RED,
     btn_primary, btn_success, btn_ghost, btn_back, btn_icon_sm,
-    groupbox_style, combobox_style, messagebox_style,
+    combobox_style, messagebox_style,
 )
 
 JOINT_NAMES = ['shoulder_pan', 'shoulder_lift', 'elbow_flex', 'wrist_flex', 'wrist_roll', 'gripper']
@@ -113,9 +114,6 @@ class JointRangeSlider(QWidget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         w, h = self.width(), self.height()
 
-        # 카드 배경
-        painter.fillRect(self.rect(), QColor(255, 255, 255))
-
         margin = 56
         bar_y = h // 2 + 4
         bar_w = w - margin * 2
@@ -208,7 +206,13 @@ class CalibrationPanel(QWidget):
 
     def _make_instruction_card(self, title: str, desc: str) -> QFrame:
         card = QFrame()
-        card.setStyleSheet(f'QFrame {{ background: #faf5ff; border-radius: 8px; border: 1px solid #ddd6fe; }}')
+        card.setStyleSheet(f"""
+            QFrame {{
+                background-color: rgba(245, 243, 255, 0.85);
+                border-radius: {RADIUS_MD};
+                border: 1px solid rgba(196, 181, 253, 0.5);
+            }}
+        """)
         layout = QVBoxLayout(card)
         layout.setSpacing(4)
         layout.setContentsMargins(12, 10, 12, 10)
@@ -238,12 +242,16 @@ class CalibrationPanel(QWidget):
                 Qt.AspectRatioMode.KeepAspectRatio,
                 Qt.TransformationMode.SmoothTransformation,
             ))
-            label.setStyleSheet(f'background: #f3f4f6; border-radius: 6px; border: 1px solid {BORDER};')
+            label.setStyleSheet(
+                'background: rgba(196,181,253,0.12); border-radius: 8px;'
+                ' border: 1px solid rgba(196,181,253,0.25);'
+            )
         else:
             label.setText(fallback_text)
             label.setStyleSheet(
-                f'background: #f3f4f6; border-radius: 6px; color: {TEXT_DISABLED}; font-size: 13px; '
-                f'border: 1px dashed {BORDER};'
+                f'background-color: rgba(196,181,253,0.15); border-radius: 8px;'
+                f' border: 1px solid rgba(196,181,253,0.3);'
+                f' color: {TEXT_DISABLED}; font-size: 13px;'
             )
             label.setWordWrap(True)
         return label
@@ -276,9 +284,22 @@ class CalibrationPanel(QWidget):
         self._refresh_ports()
 
     def _build_step_indicator(self) -> QWidget:
+        card = QFrame()
+        card.setStyleSheet(f"""
+            QFrame {{
+                background-color: {GLASS_BG};
+                border: 1px solid {GLASS_BORDER};
+                border-radius: {RADIUS_MD};
+            }}
+        """)
+        outer = QVBoxLayout(card)
+        outer.setContentsMargins(16, 10, 16, 10)
+        outer.setSpacing(0)
+
         widget = QWidget()
+        widget.setStyleSheet("background: transparent;")
         layout = QHBoxLayout(widget)
-        layout.setContentsMargins(0, 4, 0, 4)
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
         steps = ['① 연결', '② 중앙 위치', '③ 범위 탐색']
@@ -287,7 +308,7 @@ class CalibrationPanel(QWidget):
         for i, text in enumerate(steps):
             lbl = QLabel(text)
             lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            lbl.setFixedHeight(30)
+            lbl.setFixedHeight(28)
             lbl.setContentsMargins(4, 0, 4, 0)
             self._step_labels.append(lbl)
             layout.addWidget(lbl, 2)
@@ -295,11 +316,12 @@ class CalibrationPanel(QWidget):
             if i < len(steps) - 1:
                 sep = QLabel('›')
                 sep.setAlignment(Qt.AlignmentFlag.AlignCenter)
-                sep.setStyleSheet(f'color: {BORDER}; font-size: 16px; background: transparent;')
+                sep.setStyleSheet('color: rgba(196,181,253,0.6); font-size: 16px; background: transparent;')
                 sep.setFixedWidth(20)
                 layout.addWidget(sep)
 
-        return widget
+        outer.addWidget(widget)
+        return card
 
     def _update_step_indicator(self):
         for i, lbl in enumerate(self._step_labels):
@@ -336,7 +358,18 @@ class CalibrationPanel(QWidget):
         ))
 
         conn_group = QGroupBox('Connection')
-        conn_group.setStyleSheet(groupbox_style())
+        conn_group.setStyleSheet(f"""
+            QGroupBox {{
+                color: {TEXT_MUTED}; font-size: 11px; font-weight: 600;
+                letter-spacing: 0.5px;
+                background-color: {GLASS_BG};
+                border: 1px solid {GLASS_BORDER}; border-radius: {RADIUS_LG};
+                margin-top: 10px; padding-top: 12px;
+            }}
+            QGroupBox::title {{
+                subcontrol-origin: margin; left: 12px; padding: 0 4px;
+            }}
+        """)
         conn_layout = QHBoxLayout(conn_group)
         conn_layout.setSpacing(8)
         conn_layout.setContentsMargins(12, 18, 12, 12)
@@ -440,7 +473,18 @@ class CalibrationPanel(QWidget):
             row, col = divmod(i, 3)
             grid_layout.addWidget(slider, row, col)
 
-        layout.addWidget(grid_widget)
+        grid_card = QFrame()
+        grid_card.setStyleSheet(f"""
+            QFrame {{
+                background-color: {GLASS_BG};
+                border: 1px solid {GLASS_BORDER};
+                border-radius: {RADIUS_LG};
+            }}
+        """)
+        grid_card_layout = QVBoxLayout(grid_card)
+        grid_card_layout.setContentsMargins(12, 12, 12, 12)
+        grid_card_layout.addWidget(grid_widget)
+        layout.addWidget(grid_card)
         layout.addStretch()
 
         bottom = QHBoxLayout()
