@@ -89,13 +89,7 @@ class ArmConnectionWidget(QFrame):
 
     def __init__(self, title: str, parent=None):
         super().__init__(parent)
-        self.setStyleSheet(f"""
-            QFrame {{
-                background-color: {GLASS_BG};
-                border: 1px solid {GLASS_BORDER};
-                border-radius: {RADIUS_LG};
-            }}
-        """)
+        self.setStyleSheet("QFrame { background-color: transparent; border: none; }")
         self._setup_ui(title)
         self._refresh_ports()
 
@@ -287,20 +281,41 @@ class TeleopPanel(QWidget):
         content_layout.setContentsMargins(0, 0, 8, 0)
         content_layout.setSpacing(12)
 
+        conn_card = QFrame()
+        conn_card.setStyleSheet(f"""
+            QFrame {{
+                background-color: {GLASS_BG};
+                border: 1px solid {GLASS_BORDER};
+                border-radius: {RADIUS_LG};
+            }}
+        """)
+        conn_card_layout = QVBoxLayout(conn_card)
+        conn_card_layout.setContentsMargins(12, 12, 12, 12)
+        conn_card_layout.setSpacing(0)
+
         conn_label = QLabel('연결 설정')
         conn_label.setStyleSheet(
             f'color: {TEXT_DISABLED}; font-size: 10px; font-weight: 700; '
             f'letter-spacing: 1.5px; background: transparent;'
         )
-        content_layout.addWidget(conn_label)
+        conn_card_layout.addWidget(conn_label)
+        conn_card_layout.addSpacing(8)
 
         self._leader_widget = ArmConnectionWidget('리더암')
         self._leader_widget.connect_clicked.connect(self._on_leader_connect)
-        content_layout.addWidget(self._leader_widget)
+        conn_card_layout.addWidget(self._leader_widget)
+
+        sep = QFrame()
+        sep.setFrameShape(QFrame.Shape.HLine)
+        sep.setFixedHeight(1)
+        sep.setStyleSheet("background-color: rgba(196,181,253,0.3); border: none;")
+        conn_card_layout.addWidget(sep)
 
         self._follower_widget = ArmConnectionWidget('팔로워암')
         self._follower_widget.connect_clicked.connect(self._on_follower_connect)
-        content_layout.addWidget(self._follower_widget)
+        conn_card_layout.addWidget(self._follower_widget)
+
+        content_layout.addWidget(conn_card)
 
         joint_card = QFrame()
         joint_card.setStyleSheet(f"""

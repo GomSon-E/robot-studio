@@ -110,9 +110,7 @@ class DatasetSettingPanel(QWidget):
 
         edit = QLineEdit(default)
         edit.setStyleSheet(f"QLineEdit {{ {INPUT_STYLE} }} QLineEdit:focus {{ {FOCUSED_BORDER} }}")
-        edit.setFixedWidth(200)
-        row.addWidget(edit)
-        row.addStretch()
+        row.addWidget(edit, 1)
         parent_layout.addLayout(row)
         return edit
 
@@ -128,9 +126,7 @@ class DatasetSettingPanel(QWidget):
         combo = QComboBox()
         combo.addItem('')
         combo.setStyleSheet(combobox_style())
-        combo.setFixedWidth(200)
-        row.addWidget(combo)
-        row.addStretch()
+        row.addWidget(combo, 1)
         parent_layout.addLayout(row)
         return combo
 
@@ -148,7 +144,7 @@ class DatasetSettingPanel(QWidget):
         spin.setRange(min_val, max_val)
         spin.setValue(default)
         spin.setStyleSheet(f"QSpinBox {{ {INPUT_STYLE} }} QSpinBox:focus {{ {FOCUSED_BORDER} }}")
-        spin.setFixedWidth(120)
+        spin.setFixedWidth(160)
         row.addWidget(spin)
         row.addStretch()
         parent_layout.addLayout(row)
@@ -170,7 +166,7 @@ class DatasetSettingPanel(QWidget):
         spin.setDecimals(1)
         spin.setSingleStep(0.5)
         spin.setStyleSheet(f"QDoubleSpinBox {{ {INPUT_STYLE} }} QDoubleSpinBox:focus {{ {FOCUSED_BORDER} }}")
-        spin.setFixedWidth(120)
+        spin.setFixedWidth(160)
         row.addWidget(spin)
         row.addStretch()
         parent_layout.addLayout(row)
