@@ -364,7 +364,7 @@ class CalibrationPanel(QWidget):
                 letter-spacing: 0.5px;
                 background-color: {GLASS_BG};
                 border: 1px solid {GLASS_BORDER}; border-radius: {RADIUS_LG};
-                margin-top: 14px; padding-top: 10px;
+                margin-top: 14px; padding-top: 0px;
             }}
             QGroupBox::title {{
                 subcontrol-origin: margin; left: 12px; padding: 0 4px;
@@ -372,7 +372,7 @@ class CalibrationPanel(QWidget):
         """)
         conn_layout = QHBoxLayout(conn_group)
         conn_layout.setSpacing(8)
-        conn_layout.setContentsMargins(12, 12, 12, 14)
+        conn_layout.setContentsMargins(12, 16, 12, 14)
 
         self._port_combo = QComboBox()
         self._port_combo.setMinimumWidth(160)
