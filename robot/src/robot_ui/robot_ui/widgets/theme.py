@@ -233,16 +233,15 @@ def combobox_style() -> str:
     return f"""
         QComboBox {{
             background-color: {GLASS_BG};
-            border: 1px solid {GLASS_BORDER};
+            border: none;
             border-radius: {RADIUS_MD};
             padding: 6px 10px; color: {TEXT_H1}; font-size: 14px;
         }}
-        QComboBox:focus {{ border-color: {BORDER_FOCUS}; }}
         QComboBox::drop-down {{ border: none; width: 20px; }}
         QComboBox QAbstractItemView {{
             background-color: white; color: {TEXT_BODY};
             selection-background-color: rgba(124,58,237,0.1);
-            border: 1px solid {BORDER}; outline: none;
+            border: none; outline: none;
         }}
     """
 

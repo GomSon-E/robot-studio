@@ -64,7 +64,7 @@ class DatasetSettingPanel(QWidget):
         settings_card.setStyleSheet(f"""
             QFrame {{
                 background-color: {GLASS_BG};
-                border: 1px solid {GLASS_BORDER};
+                border: none;
                 border-radius: 14px;
             }}
         """)
