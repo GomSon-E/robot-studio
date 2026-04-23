@@ -49,7 +49,7 @@ class _CameraWidget(QFrame):
         self.setStyleSheet(f"""
             QFrame {{
                 background-color: {GLASS_BG};
-                border: 1px solid {GLASS_BORDER};
+                border: none;
                 border-radius: {RADIUS_MD};
             }}
         """)
@@ -328,7 +328,7 @@ class DataCollectionPanel(QWidget):
         progress_card.setStyleSheet(f"""
             QFrame {{
                 background-color: {GLASS_BG};
-                border: 1px solid {GLASS_BORDER};
+                border: none;
                 border-radius: {RADIUS_LG};
             }}
         """)
@@ -354,7 +354,7 @@ class DataCollectionPanel(QWidget):
         joint_card.setStyleSheet(f"""
             QFrame {{
                 background-color: {GLASS_BG};
-                border: 1px solid {GLASS_BORDER};
+                border: none;
                 border-radius: {RADIUS_LG};
             }}
         """)
