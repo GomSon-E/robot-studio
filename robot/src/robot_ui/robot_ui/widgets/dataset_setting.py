@@ -9,8 +9,23 @@ from PySide6.QtCore import Qt, Signal
 
 from .theme import (
     GLASS_BG, GLASS_BORDER, TEXT_H1, TEXT_BODY, BORDER_FOCUS,
-    RADIUS_MD, btn_primary, combobox_style,
+    RADIUS_MD, btn_primary,
 )
+
+_COMBO_STYLE = f"""
+    QComboBox {{
+        background-color: {GLASS_BG};
+        border: none;
+        border-radius: {RADIUS_MD};
+        padding: 6px 10px; color: {TEXT_H1}; font-size: 14px;
+    }}
+    QComboBox::drop-down {{ border: none; width: 20px; }}
+    QComboBox QAbstractItemView {{
+        background-color: white; color: {TEXT_BODY};
+        selection-background-color: rgba(124,58,237,0.1);
+        border: none; outline: none;
+    }}
+"""
 
 CAMERA_ROLES = ['top', 'wrist']
 
@@ -18,7 +33,7 @@ LABEL_STYLE = f"color: {TEXT_BODY}; font-size: 14px; background: transparent;"
 INPUT_STYLE = f"""
     background-color: {GLASS_BG};
     color: {TEXT_H1};
-    border: 1px solid {GLASS_BORDER};
+    border: none;
     border-radius: {RADIUS_MD};
     padding: 6px 12px;
     font-size: 14px;
@@ -125,7 +140,7 @@ class DatasetSettingPanel(QWidget):
 
         combo = QComboBox()
         combo.addItem('')
-        combo.setStyleSheet(combobox_style())
+        combo.setStyleSheet(_COMBO_STYLE)
         row.addWidget(combo, 1)
         parent_layout.addLayout(row)
         return combo
