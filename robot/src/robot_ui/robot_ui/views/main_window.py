@@ -1,8 +1,9 @@
 import asyncio
-from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QStackedWidget
+from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QStackedWidget
+from PySide6.QtCore import Qt
 from rclpy.logging import get_logger
 from ..widgets import Sidebar, CameraPreviewArea, DatasetSettingPanel, DataCollectionPanel, TeleopPanel, LoginWebView, CalibrationPanel
-from ..widgets.theme import BG_PAGE, TEXT_BODY, FONT_FAMILY
+from ..widgets.theme import BG_GRADIENT, TEXT_BODY, FONT_FAMILY
 from ..utils.api_client import ApiClient
 
 logger = get_logger('MainWindow')
@@ -15,11 +16,7 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(1200, 800)
 
         self.setStyleSheet(f"""
-            QMainWindow {{
-                background-color: {BG_PAGE};
-            }}
             QWidget {{
-                background-color: {BG_PAGE};
                 color: {TEXT_BODY};
                 font-family: {FONT_FAMILY};
             }}
@@ -29,8 +26,18 @@ class MainWindow(QMainWindow):
         self._setup_ui()
 
     def _setup_ui(self):
+        central_widget = QWidget()
+        central_widget.setObjectName('AppRoot')
+        central_widget.setStyleSheet(f"#AppRoot {{ background: {BG_GRADIENT}; }}")
+        central_widget.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.setCentralWidget(central_widget)
+
+        root_layout = QVBoxLayout(central_widget)
+        root_layout.setContentsMargins(0, 0, 0, 0)
+        root_layout.setSpacing(0)
+
         self.stacked_widget = QStackedWidget()
-        self.setCentralWidget(self.stacked_widget)
+        root_layout.addWidget(self.stacked_widget)
 
         # 페이지 0: 로그인
         self.login_webview = LoginWebView()
@@ -78,7 +85,7 @@ class MainWindow(QMainWindow):
 
         # 빈 메인 영역 (기본)
         self.empty_area = QWidget()
-        self.empty_area.setStyleSheet(f"background-color: {BG_PAGE};")
+        self.empty_area.setStyleSheet("background-color: transparent;")
         main_layout.addWidget(self.empty_area, 1)
 
         # 카메라 토픽 목록 → DatasetSettingPanel 콤보박스 + DataCollectionPanel 그리드 연결
