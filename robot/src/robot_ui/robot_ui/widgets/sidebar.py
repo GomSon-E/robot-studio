@@ -33,6 +33,7 @@ class SidebarItem(QWidget):
         self._is_exit = is_exit
         self._active = False
         self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(10, 9, 10, 9)
@@ -164,16 +165,6 @@ class Sidebar(QWidget):
             """)
             brand_row.addWidget(logo_lbl)
 
-        brand_text = QLabel('Robot Studio')
-        brand_text.setStyleSheet("""
-            QLabel {
-                color: rgba(255, 255, 255, 0.95);
-                font-size: 14px;
-                font-weight: 700;
-                letter-spacing: -0.3px;
-            }
-        """)
-        brand_row.addWidget(brand_text)
         brand_row.addStretch()
         layout.addLayout(brand_row)
 
@@ -183,7 +174,7 @@ class Sidebar(QWidget):
         menu_lbl = QLabel('MENU')
         menu_lbl.setStyleSheet("""
             QLabel {
-                color: rgba(255, 255, 255, 0.4);
+                color: #8e95a8;
                 font-size: 9px; font-weight: 700;
                 letter-spacing: 1.5px;
             }
