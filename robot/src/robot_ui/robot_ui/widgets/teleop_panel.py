@@ -3,7 +3,7 @@ import threading
 import serial.tools.list_ports
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QGroupBox, QComboBox, QProgressBar, QScrollArea,
+    QFrame, QComboBox, QProgressBar, QScrollArea,
 )
 from PySide6.QtCore import Qt, Signal, QObject
 
@@ -19,10 +19,11 @@ from robot_driver.follower_arm_node import FollowerArmNode
 from robot_driver.teleop_node import TeleopNode
 
 from .theme import (
-    BG_CARD, TEXT_H1, TEXT_BODY, TEXT_MUTED, TEXT_DISABLED,
+    GLASS_BG, GLASS_BORDER, RADIUS_LG,
+    TEXT_H1, TEXT_BODY, TEXT_MUTED, TEXT_DISABLED,
     ACCENT, ACCENT_GREEN, ACCENT_RED,
     btn_primary, btn_success, btn_danger, btn_warning, btn_icon_sm,
-    groupbox_style, combobox_style, scrollbar_style, progressbar_style,
+    combobox_style, scrollbar_style, progressbar_style,
 )
 
 JOINT_NAMES = ['shoulder_pan', 'shoulder_lift', 'elbow_flex', 'wrist_flex', 'wrist_roll', 'gripper']
@@ -83,46 +84,65 @@ class TeleopUINode(Node):
 
 # ─── 암 연결 위젯 ─────────────────────────────────────────────────────────────
 
-class ArmConnectionWidget(QGroupBox):
+class ArmConnectionWidget(QFrame):
     connect_clicked = Signal(str)
 
     def __init__(self, title: str, parent=None):
-        super().__init__(title, parent)
-        self.setStyleSheet(groupbox_style())
-        self._setup_ui()
+        super().__init__(parent)
+        self.setStyleSheet(f"""
+            QFrame {{
+                background-color: {GLASS_BG};
+                border: 1px solid {GLASS_BORDER};
+                border-radius: {RADIUS_LG};
+            }}
+        """)
+        self._setup_ui(title)
         self._refresh_ports()
 
-    def _setup_ui(self):
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(12, 18, 12, 12)
-        layout.setSpacing(8)
+    def _setup_ui(self, title: str):
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(12, 12, 12, 12)
+        outer.setSpacing(8)
+
+        title_lbl = QLabel(title)
+        title_lbl.setStyleSheet(
+            f"color: {TEXT_MUTED}; font-size: 10px; font-weight: 700;"
+            " letter-spacing: 1px; background: transparent;"
+        )
+        outer.addWidget(title_lbl)
+
+        row = QHBoxLayout()
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(8)
 
         self._led = QLabel('●')
         self._led.setStyleSheet(_LED_STYLE['idle'])
         self._led.setFixedWidth(14)
-        layout.addWidget(self._led)
+        row.addWidget(self._led)
 
         self._status_label = QLabel('대기')
         self._status_label.setStyleSheet(f'color: {TEXT_MUTED}; font-size: 12px; background: transparent;')
         self._status_label.setFixedWidth(80)
-        layout.addWidget(self._status_label)
+        row.addWidget(self._status_label)
 
         self._combo = QComboBox()
         self._combo.setStyleSheet(combobox_style())
-        layout.addWidget(self._combo, 1)
+        row.addWidget(self._combo, 1)
 
         refresh_btn = QPushButton('↺')
         refresh_btn.setFixedSize(30, 30)
         refresh_btn.setToolTip('포트 목록 새로고침')
         refresh_btn.setStyleSheet(btn_icon_sm())
         refresh_btn.clicked.connect(self._refresh_ports)
-        layout.addWidget(refresh_btn)
+        row.addWidget(refresh_btn)
 
         self._connect_btn = QPushButton('연결')
         self._connect_btn.setFixedHeight(30)
         self._connect_btn.setStyleSheet(btn_primary())
         self._connect_btn.clicked.connect(self._on_connect_clicked)
-        layout.addWidget(self._connect_btn)
+        row.addWidget(self._connect_btn)
+
+        outer.addLayout(row)
 
     def _refresh_ports(self):
         self._combo.clear()
@@ -180,7 +200,7 @@ class JointStateRow(QWidget):
         self._leader_bar.setValue(2048)
         self._leader_bar.setFixedHeight(14)
         self._leader_bar.setTextVisible(False)
-        self._leader_bar.setStyleSheet(progressbar_style(ACCENT))
+        self._leader_bar.setStyleSheet(progressbar_style(ACCENT, '#a78bfa'))
         layout.addWidget(self._leader_bar, 1)
 
         self._leader_val = QLabel('2048')
@@ -198,7 +218,7 @@ class JointStateRow(QWidget):
         self._follower_bar.setValue(2048)
         self._follower_bar.setFixedHeight(14)
         self._follower_bar.setTextVisible(False)
-        self._follower_bar.setStyleSheet(progressbar_style(ACCENT_GREEN))
+        self._follower_bar.setStyleSheet(progressbar_style(ACCENT_GREEN, '#34d399'))
         layout.addWidget(self._follower_bar, 1)
 
         self._follower_val = QLabel('2048')
@@ -282,11 +302,24 @@ class TeleopPanel(QWidget):
         self._follower_widget.connect_clicked.connect(self._on_follower_connect)
         content_layout.addWidget(self._follower_widget)
 
-        joint_group = QGroupBox('관절 상태')
-        joint_group.setStyleSheet(groupbox_style())
-        joint_layout = QVBoxLayout(joint_group)
-        joint_layout.setContentsMargins(12, 18, 12, 12)
+        joint_card = QFrame()
+        joint_card.setStyleSheet(f"""
+            QFrame {{
+                background-color: {GLASS_BG};
+                border: 1px solid {GLASS_BORDER};
+                border-radius: {RADIUS_LG};
+            }}
+        """)
+        joint_layout = QVBoxLayout(joint_card)
+        joint_layout.setContentsMargins(14, 14, 14, 12)
         joint_layout.setSpacing(4)
+
+        section_lbl = QLabel('관절 상태')
+        section_lbl.setStyleSheet(
+            f"color: {TEXT_MUTED}; font-size: 9px; font-weight: 700;"
+            " letter-spacing: 1px; background: transparent;"
+        )
+        joint_layout.addWidget(section_lbl)
 
         legend_layout = QHBoxLayout()
         legend_layout.addSpacing(118)
@@ -305,7 +338,7 @@ class TeleopPanel(QWidget):
             self._joint_rows.append(row)
             joint_layout.addWidget(row)
 
-        content_layout.addWidget(joint_group)
+        content_layout.addWidget(joint_card)
         content_layout.addStretch()
         scroll.setWidget(content)
         main_layout.addWidget(scroll, 1)
