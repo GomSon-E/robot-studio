@@ -151,16 +151,16 @@ class Sidebar(QWidget):
         brand_row.setContentsMargins(4, 0, 4, 0)
         brand_row.setSpacing(9)
 
-        logo_pixmap = _load_logo(28)
+        logo_pixmap = _load_logo(54)
         if logo_pixmap:
             logo_lbl = QLabel()
             logo_lbl.setPixmap(logo_pixmap)
-            logo_lbl.setFixedSize(32, 32)
+            logo_lbl.setFixedSize(60, 60)
             logo_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
             logo_lbl.setStyleSheet("""
                 QLabel {
                     background-color: white;
-                    border-radius: 9px;
+                    border-radius: 14px;
                 }
             """)
             brand_row.addWidget(logo_lbl)
