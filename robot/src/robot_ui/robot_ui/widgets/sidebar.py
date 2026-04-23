@@ -42,6 +42,8 @@ class SidebarItem(QWidget):
         self._badge = QLabel()
         self._badge.setFixedSize(26, 26)
         self._badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        if is_exit:
+            self._badge.setVisible(False)
         layout.addWidget(self._badge)
 
         # 텍스트
@@ -64,9 +66,9 @@ class SidebarItem(QWidget):
             text_color = '#4c1d95'
             item_bg    = 'rgba(255, 255, 255, 0.42)'
         else:
-            badge_bg   = 'rgba(255, 255, 255, 0.18)'
-            icon_color = 'rgba(255, 255, 255, 0.75)'
-            text_color = 'rgba(255, 255, 255, 0.82)'
+            badge_bg   = 'rgba(255, 255, 255, 0.65)'
+            icon_color = '#8e95a8'
+            text_color = '#8e95a8'
             item_bg    = 'transparent'
 
         # 배지 배경
