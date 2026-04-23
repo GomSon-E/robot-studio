@@ -103,8 +103,9 @@ def render_svg_icon(svg_template: str, color: str, size: int = 13) -> QPixmap:
     """SVG 문자열을 QPixmap으로 렌더링한다. color는 stroke 색상 문자열."""
     try:
         from PySide6.QtSvg import QSvgRenderer
-        data = svg_template.format(color=color).encode('utf-8')
-        renderer = QSvgRenderer(data)
+        from PySide6.QtCore import QByteArray
+        raw = svg_template.format(color=color).encode('utf-8')
+        renderer = QSvgRenderer(QByteArray(raw))
         px = QPixmap(size, size)
         px.fill(Qt.GlobalColor.transparent)
         p = QPainter(px)
