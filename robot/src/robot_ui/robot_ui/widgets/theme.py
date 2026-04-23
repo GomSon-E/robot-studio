@@ -1,4 +1,4 @@
-from PySide6.QtGui import QPainter, QPixmap, QColor
+from PySide6.QtGui import QPainter, QPixmap
 from PySide6.QtCore import Qt
 
 FONT_FAMILY = "'Pretendard', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Noto Sans KR', sans-serif"
@@ -38,9 +38,10 @@ SIDEBAR_BORDER = 'rgba(255, 255, 255, 115)'  # 45%
 BORDER       = '#e2e5ec'
 BORDER_FOCUS = '#7c3aed'
 
-RADIUS_LG = '14px'
-RADIUS_MD = '10px'
-RADIUS_SM = '7px'
+RADIUS_LG  = '14px'
+RADIUS_MD  = '10px'
+RADIUS_SM  = '7px'
+RADIUS_BAR = '4px'
 
 # ── SVG 아이콘 문자열 (stroke 색상은 {color} placeholder) ───────────────────
 _SVG_CALIBRATION = (
@@ -110,7 +111,9 @@ def render_svg_icon(svg_template: str, color: str, size: int = 13) -> QPixmap:
         renderer.render(p)
         p.end()
         return px
-    except Exception:
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).warning("render_svg_icon failed: %s", exc)
         return QPixmap()
 
 
@@ -263,13 +266,13 @@ def progressbar_style(start_color: str, end_color: str | None = None) -> str:
     end = end_color or start_color
     return f"""
         QProgressBar {{
-            border: none; border-radius: 4px;
+            border: none; border-radius: {RADIUS_BAR};
             background-color: rgba(196, 181, 253, 64);
         }}
         QProgressBar::chunk {{
             background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
                 stop:0 {start_color}, stop:1 {end});
-            border-radius: 4px;
+            border-radius: {RADIUS_BAR};
         }}
     """
 
@@ -304,3 +307,13 @@ def messagebox_style() -> str:
                 stop:0 {ACCENT_HOVER}, stop:1 {ACCENT});
         }}
     """
+
+
+# ── 하위 호환 별칭 (Tasks 2–7 완료 시 제거) ──────────────────────────────────
+BG_PAGE          = BG_GRADIENT
+BG_CARD          = GLASS_BG
+BG_INPUT         = GLASS_BG
+BG_SURFACE       = GLASS_BG_LT
+BG_SIDEBAR       = SIDEBAR_BG
+ACCENT_BG        = 'rgba(124, 58, 237, 20)'
+ACCENT_ACTIVE_BG = 'rgba(124, 58, 237, 31)'
