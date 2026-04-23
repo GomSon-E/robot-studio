@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QProgressBar,
-    QDialog, QFrame, QGridLayout, QGroupBox, QScrollArea,
+    QDialog, QFrame, QGridLayout, QScrollArea,
 )
 from PySide6.QtCore import Qt, Signal, QObject
 from PySide6.QtGui import QImage, QPixmap, QPainter, QFont, QColor
@@ -18,9 +18,10 @@ from ..utils import ApiClient
 from ..utils.joint_state_collector import JointStateCollector
 from ..services import UploadService, MultiCameraRecordingService, ParquetWriter, MetadataService
 from .theme import (
-    BG_CARD, BORDER, TEXT_H1, TEXT_BODY, TEXT_MUTED, TEXT_DISABLED,
-    ACCENT, ACCENT_GREEN, ACCENT_RED,
-    btn_danger, btn_success, groupbox_style, progressbar_style,
+    GLASS_BG, GLASS_BORDER, RADIUS_LG, RADIUS_MD,
+    TEXT_H1, TEXT_BODY, TEXT_MUTED, TEXT_DISABLED,
+    ACCENT, ACCENT_GREEN, ACCENT_GREEN_END, ACCENT_RED,
+    btn_danger, btn_success, progressbar_style,
 )
 
 logger = get_logger('DataCollection')
@@ -47,9 +48,9 @@ class _CameraWidget(QFrame):
         self.role = role
         self.setStyleSheet(f"""
             QFrame {{
-                background-color: {BG_CARD};
-                border: 1px solid {BORDER};
-                border-radius: 8px;
+                background-color: {GLASS_BG};
+                border: 1px solid {GLASS_BORDER};
+                border-radius: {RADIUS_MD};
             }}
         """)
         self.setMinimumSize(280, 210)
@@ -64,7 +65,10 @@ class _CameraWidget(QFrame):
 
         self._image_label = QLabel()
         self._image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._image_label.setStyleSheet(f"background-color: #f3f4f6; border-radius: 4px; color: {TEXT_DISABLED}; border: none;")
+        self._image_label.setStyleSheet(
+            "background-color: rgba(196,181,253,0.15); border-radius: 6px;"
+            f" color: {TEXT_DISABLED}; border: 1px solid rgba(196,181,253,0.25);"
+        )
         self._image_label.setText('대기 중...')
         layout.addWidget(self._image_label, 1)
 
@@ -102,7 +106,7 @@ class _JointRow(QWidget):
         self._bar.setValue(2048)
         self._bar.setFixedHeight(12)
         self._bar.setTextVisible(False)
-        self._bar.setStyleSheet(progressbar_style(ACCENT_GREEN))
+        self._bar.setStyleSheet(progressbar_style(ACCENT_GREEN, ACCENT_GREEN_END))
         layout.addWidget(self._bar, 1)
 
         self._val = QLabel('2048')
@@ -133,7 +137,7 @@ class _PostProcessDialog(QDialog):
         )
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.setFixedSize(400, 140)
-        self.setStyleSheet(f"background-color: {BG_CARD}; color: {TEXT_H1};")
+        self.setStyleSheet(f"background-color: white; color: {TEXT_H1};")
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(24, 20, 24, 20)
@@ -148,7 +152,7 @@ class _PostProcessDialog(QDialog):
         self._bar.setValue(already_done)
         self._bar.setFixedHeight(12)
         self._bar.setTextVisible(False)
-        self._bar.setStyleSheet(progressbar_style(ACCENT))
+        self._bar.setStyleSheet(progressbar_style(ACCENT, '#a78bfa'))
         layout.addWidget(self._bar)
 
         self._progress_label = QLabel(f"에피소드 {already_done} / {total} 완료")
@@ -301,8 +305,7 @@ class DataCollectionPanel(QWidget):
         self._phase_bar.setTextVisible(False)
         self._phase_bar.setRange(0, 1000)
         self._phase_bar.setValue(0)
-        self._phase_bar.setStyleSheet(self._make_bar_style('#d1d5db'))
-        root.addWidget(self._phase_bar)
+        self._phase_bar.setStyleSheet(progressbar_style('#d1d5db'))
 
         # ── 에피소드 전체 진행 바 ─────────────────────────────────────
         ep_row = QHBoxLayout()
@@ -314,12 +317,27 @@ class DataCollectionPanel(QWidget):
         self._progress_bar.setTextVisible(False)
         self._progress_bar.setRange(0, 1)
         self._progress_bar.setValue(0)
-        self._progress_bar.setStyleSheet(self._make_bar_style(ACCENT))
+        self._progress_bar.setStyleSheet(progressbar_style(ACCENT, '#a78bfa'))
         ep_row.addWidget(self._progress_bar, 1)
         self._progress_label = QLabel('0 / 0')
         self._progress_label.setStyleSheet(f"color: {TEXT_MUTED}; font-size: 10px; background: transparent;")
         ep_row.addWidget(self._progress_label)
-        root.addLayout(ep_row)
+
+        # ── 진행 글래스 카드 ─────────────────────────────────────────
+        progress_card = QFrame()
+        progress_card.setStyleSheet(f"""
+            QFrame {{
+                background-color: {GLASS_BG};
+                border: 1px solid {GLASS_BORDER};
+                border-radius: {RADIUS_LG};
+            }}
+        """)
+        progress_inner = QVBoxLayout(progress_card)
+        progress_inner.setContentsMargins(16, 12, 16, 12)
+        progress_inner.setSpacing(8)
+        progress_inner.addWidget(self._phase_bar)
+        progress_inner.addLayout(ep_row)
+        root.addWidget(progress_card)
 
         # ── 메인 콘텐츠 (카메라 + 관절) ──────────────────────────────
         content = QHBoxLayout()
@@ -332,40 +350,51 @@ class DataCollectionPanel(QWidget):
         self._cam_layout.setSpacing(8)
         content.addWidget(cam_frame, 3)
 
-        joint_group = QGroupBox('팔로워암 관절 상태')
-        joint_group.setStyleSheet(groupbox_style())
-        joint_layout = QVBoxLayout(joint_group)
-        joint_layout.setContentsMargins(10, 18, 10, 10)
+        joint_card = QFrame()
+        joint_card.setStyleSheet(f"""
+            QFrame {{
+                background-color: {GLASS_BG};
+                border: 1px solid {GLASS_BORDER};
+                border-radius: {RADIUS_LG};
+            }}
+        """)
+        joint_layout = QVBoxLayout(joint_card)
+        joint_layout.setContentsMargins(12, 14, 12, 12)
         joint_layout.setSpacing(2)
+        section_lbl = QLabel('팔로워암 관절')
+        section_lbl.setStyleSheet(
+            f"color: {TEXT_MUTED}; font-size: 9px; font-weight: 700;"
+            " letter-spacing: 1px; text-transform: uppercase; background: transparent;"
+        )
+        joint_layout.addWidget(section_lbl)
         for name in JOINT_NAMES:
             row = _JointRow(name)
             self._joint_rows.append(row)
             joint_layout.addWidget(row)
         joint_layout.addStretch()
-        content.addWidget(joint_group, 1)
+        content.addWidget(joint_card, 1)
 
         root.addLayout(content, 1)
 
         # ── Record 버튼 ───────────────────────────────────────────────
         self.record_btn = QPushButton('Record')
         self.record_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.record_btn.setFixedHeight(44)
+        self.record_btn.setFixedHeight(48)
         self.record_btn.setStyleSheet(btn_danger())
         self.record_btn.clicked.connect(self._on_record_clicked)
         root.addWidget(self.record_btn)
 
-    @staticmethod
-    def _make_bar_style(color: str) -> str:
-        return f"""
-            QProgressBar {{
-                border: none; border-radius: 4px;
-                background-color: #f3f4f6;
-            }}
-            QProgressBar::chunk {{
-                background-color: {color};
-                border-radius: 4px;
-            }}
-        """
+        from PySide6.QtCore import QPropertyAnimation, QEasingCurve
+        from PySide6.QtWidgets import QGraphicsOpacityEffect
+        self._pulse_effect = QGraphicsOpacityEffect(self.record_btn)
+        self._pulse_effect.setOpacity(1.0)
+        self.record_btn.setGraphicsEffect(self._pulse_effect)
+        self._pulse_anim = QPropertyAnimation(self._pulse_effect, b'opacity')
+        self._pulse_anim.setDuration(700)
+        self._pulse_anim.setStartValue(0.65)
+        self._pulse_anim.setEndValue(1.0)
+        self._pulse_anim.setEasingCurve(QEasingCurve.Type.InOutSine)
+        self._pulse_anim.setLoopCount(-1)
 
     # ------------------------------------------------------------------
     # 카메라 위젯 동적 생성
@@ -469,6 +498,7 @@ class DataCollectionPanel(QWidget):
         camera_roles = self.settings.get('camera_roles', {})
 
         self.is_recording = True
+        self._pulse_anim.start()
         self.record_btn.setEnabled(False)
         self._progress_bar.setMaximum(episodes)
         self._progress_bar.setValue(0)
@@ -504,6 +534,8 @@ class DataCollectionPanel(QWidget):
         self._time_label.setText('완료')
         self._status_label.setText('수집 완료!')
         self.is_recording = False
+        self._pulse_anim.stop()
+        self._pulse_effect.setOpacity(1.0)
         self.record_btn.setEnabled(True)
         self.recording_finished.emit()
 
@@ -539,7 +571,8 @@ class DataCollectionPanel(QWidget):
         self._phase_label.setStyleSheet(
             f"color: {dot_color}; font-size: 13px; font-weight: 600; background: transparent;"
         )
-        self._phase_bar.setStyleSheet(self._make_bar_style(bar_color))
+        bar_end = '#a78bfa' if bar_color == ACCENT else bar_color
+        self._phase_bar.setStyleSheet(progressbar_style(bar_color, bar_end))
 
     # ------------------------------------------------------------------
     # 에피소드 결과 팝업
@@ -551,7 +584,7 @@ class DataCollectionPanel(QWidget):
 
         dialog = QDialog(self)
         dialog.setWindowTitle(f"에피소드 {episode_index + 1} 결과")
-        dialog.setStyleSheet(f"background-color: {BG_CARD}; color: {TEXT_H1};")
+        dialog.setStyleSheet(f"background-color: white; color: {TEXT_H1};")
         dialog.setFixedSize(320, 130)
 
         outer = QVBoxLayout(dialog)
