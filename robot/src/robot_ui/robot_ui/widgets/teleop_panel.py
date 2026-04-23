@@ -100,8 +100,8 @@ class ArmConnectionWidget(QFrame):
 
         title_lbl = QLabel(title)
         title_lbl.setStyleSheet(
-            f"color: {TEXT_MUTED}; font-size: 10px; font-weight: 700;"
-            " letter-spacing: 1px; background: transparent;"
+            f"color: {TEXT_BODY}; font-size: 13px; font-weight: 600;"
+            " background: transparent;"
         )
         outer.addWidget(title_lbl)
 
@@ -115,7 +115,7 @@ class ArmConnectionWidget(QFrame):
         row.addWidget(self._led)
 
         self._status_label = QLabel('대기')
-        self._status_label.setStyleSheet(f'color: {TEXT_MUTED}; font-size: 12px; background: transparent;')
+        self._status_label.setStyleSheet(f'color: {TEXT_MUTED}; font-size: 13px; background: transparent;')
         self._status_label.setFixedWidth(80)
         row.addWidget(self._status_label)
 
@@ -295,8 +295,8 @@ class TeleopPanel(QWidget):
 
         conn_label = QLabel('연결 설정')
         conn_label.setStyleSheet(
-            f'color: {TEXT_DISABLED}; font-size: 10px; font-weight: 700; '
-            f'letter-spacing: 1.5px; background: transparent;'
+            f'color: {TEXT_MUTED}; font-size: 13px; font-weight: 600; '
+            f'background: transparent;'
         )
         conn_card_layout.addWidget(conn_label)
         conn_card_layout.addSpacing(8)
