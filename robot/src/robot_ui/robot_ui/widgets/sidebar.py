@@ -59,7 +59,7 @@ class SidebarItem(QWidget):
             badge_bg   = 'rgba(220, 38, 38, 0.18)'
             icon_color = 'rgba(220,38,38,0.85)'
             text_color = 'rgba(220, 38, 38, 0.9)'
-            item_bg    = 'rgba(220, 38, 38, 0.10)'
+            item_bg    = 'rgba(254, 226, 226, 0.82)'
         elif self._active:
             badge_bg   = ACCENT
             icon_color = 'white'
