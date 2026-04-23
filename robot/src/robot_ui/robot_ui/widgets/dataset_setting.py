@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal
 
 from .theme import (
-    BG_CARD, TEXT_H1, TEXT_BODY, TEXT_MUTED, BORDER, BORDER_FOCUS,
+    GLASS_BG, GLASS_BORDER, TEXT_H1, TEXT_BODY, BORDER_FOCUS,
     RADIUS_MD, btn_primary, combobox_style,
 )
 
@@ -16,9 +16,9 @@ CAMERA_ROLES = ['top', 'wrist']
 
 LABEL_STYLE = f"color: {TEXT_BODY}; font-size: 14px; background: transparent;"
 INPUT_STYLE = f"""
-    background-color: {BG_CARD};
+    background-color: {GLASS_BG};
     color: {TEXT_H1};
-    border: 1px solid {BORDER};
+    border: 1px solid {GLASS_BORDER};
     border-radius: {RADIUS_MD};
     padding: 6px 12px;
     font-size: 14px;
@@ -45,13 +45,18 @@ class DatasetSettingPanel(QWidget):
         title.setStyleSheet(f"color: {TEXT_H1}; font-size: 22px; font-weight: 700; background: transparent;")
         layout.addWidget(title)
 
-        separator = QFrame()
-        separator.setFrameShape(QFrame.Shape.HLine)
-        separator.setStyleSheet(f"background-color: {BORDER}; border: none; max-height: 1px;")
-        layout.addWidget(separator)
-
-        settings_layout = QVBoxLayout()
-        settings_layout.setSpacing(12)
+        settings_card = QFrame()
+        settings_card.setStyleSheet(f"""
+            QFrame {{
+                background-color: {GLASS_BG};
+                border: 1px solid {GLASS_BORDER};
+                border-radius: 14px;
+            }}
+        """)
+        settings_inner = QVBoxLayout(settings_card)
+        settings_inner.setContentsMargins(20, 16, 20, 16)
+        settings_inner.setSpacing(12)
+        settings_layout = settings_inner
 
         self.dataset_name_edit = self._create_lineedit_row(
             settings_layout, 'Dataset Name',
@@ -78,7 +83,7 @@ class DatasetSettingPanel(QWidget):
             settings_layout, 'Term Length (sec)', 0.0, 3600.0, 1.0
         )
 
-        layout.addLayout(settings_layout)
+        layout.addWidget(settings_card)
         layout.addStretch()
 
         btn_layout = QHBoxLayout()
