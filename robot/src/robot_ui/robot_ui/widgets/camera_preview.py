@@ -15,7 +15,7 @@ import numpy as np
 
 from ..utils import ImageSignal, CameraSubscriberNode
 from .theme import (
-    BG_CARD, BORDER, TEXT_H1, TEXT_MUTED, TEXT_DISABLED,
+    GLASS_BG, GLASS_BORDER, TEXT_H1, TEXT_MUTED, TEXT_DISABLED,
     btn_primary, scrollbar_style,
 )
 
@@ -31,13 +31,13 @@ class CameraPreviewWidget(QFrame):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setStyleSheet(f"""
             QFrame {{
-                background-color: {BG_CARD};
-                border: 1px solid {BORDER};
-                border-radius: 12px;
+                background-color: {GLASS_BG};
+                border: 1px solid {GLASS_BORDER};
+                border-radius: 14px;
             }}
             QFrame:hover {{
-                background-color: #f5f3ff;
-                border-color: #c4b5fd;
+                background-color: rgba(245, 243, 255, 0.75);
+                border-color: rgba(196, 181, 253, 0.7);
             }}
         """)
         self.setMinimumSize(400, 300)
@@ -69,9 +69,9 @@ class CameraPreviewWidget(QFrame):
         self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.image_label.setStyleSheet(f"""
             QLabel {{
-                background-color: #f3f4f6;
-                border-radius: 6px;
-                border: none;
+                background-color: rgba(196,181,253,0.15);
+                border-radius: 8px;
+                border: 1px solid rgba(196,181,253,0.25);
                 color: {TEXT_DISABLED};
             }}
         """)
