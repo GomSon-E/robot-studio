@@ -43,6 +43,11 @@ RADIUS_MD  = '10px'
 RADIUS_SM  = '7px'
 RADIUS_BAR = '4px'
 
+# ── 오버레이 / 퍼플 틴트 ──────────────────────────────────────────────────────
+PURPLE_TINT        = 'rgba(196,181,253,0.15)'   # 카메라 플레이스홀더 배경
+PURPLE_TINT_BORDER = 'rgba(196,181,253,0.25)'   # 카메라 플레이스홀더 테두리
+OVERLAY_BG         = (30, 27, 75, 166)          # 카운트다운 오버레이 (QColor r,g,b,a)
+
 # ── SVG 아이콘 문자열 (stroke 색상은 {color} placeholder) ───────────────────
 _SVG_CALIBRATION = (
     '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13"'
