@@ -249,7 +249,7 @@ class DataCollectionPanel(QWidget):
         'idle':      ('● 대기',     TEXT_DISABLED, '#d1d5db'),
     }
 
-    def __init__(self, parent=None):
+    def __init__(self, api_client: ApiClient = None, parent=None):
         super().__init__(parent)
         self.settings: dict = {}
         self.is_recording = False
@@ -257,7 +257,7 @@ class DataCollectionPanel(QWidget):
         self.joint_collector = None
         self.recording_service = None
         self.session_dir: Path = None
-        self.upload_service = UploadService(ApiClient())
+        self.upload_service = UploadService(api_client or ApiClient())
         self._frame_subscriptions: list = []
         self.recording_task = None
 

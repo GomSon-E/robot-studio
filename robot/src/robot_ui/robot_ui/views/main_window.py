@@ -79,7 +79,7 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(self.dataset_setting_panel, 1)
 
         # 4. 데이터 수집 패널
-        self.data_collection_panel = DataCollectionPanel()
+        self.data_collection_panel = DataCollectionPanel(api_client=self.api_client)
         self.data_collection_panel.setVisible(False)
         main_layout.addWidget(self.data_collection_panel, 1)
 
