@@ -6,8 +6,8 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QComboBox, QGridLayout, QFrame, QStackedWidget, QMessageBox,
 )
-from PySide6.QtCore import Qt, Signal, QObject, QPoint
-from PySide6.QtGui import QPainter, QColor, QPen, QFont, QPolygon, QPixmap
+from PySide6.QtCore import Qt, Signal, QObject, QPoint, QSize
+from PySide6.QtGui import QPainter, QColor, QPen, QFont, QPolygon, QPixmap, QMovie
 
 import rclpy
 from rclpy.executors import MultiThreadedExecutor
@@ -270,6 +270,29 @@ class CalibrationPanel(QWidget):
             label.setWordWrap(True)
         return label
 
+    def _make_gif_player(self, filename: str, height: int = 180) -> QLabel:
+        gif_path = ASSETS_DIR / filename
+        label = QLabel()
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        label.setFixedHeight(height)
+        if gif_path.exists():
+            movie = QMovie(str(gif_path))
+            movie.setScaledSize(QSize(height * 4 // 3, height))
+            label.setMovie(movie)
+            movie.start()
+            label.setStyleSheet(
+                'background: rgba(196,181,253,0.12); border-radius: 8px;'
+                ' border: 1px solid rgba(196,181,253,0.25);'
+            )
+        else:
+            label.setText(filename)
+            label.setStyleSheet(
+                f'background-color: rgba(196,181,253,0.15); border-radius: 8px;'
+                f' border: 1px solid rgba(196,181,253,0.3);'
+                f' color: {TEXT_DISABLED}; font-size: 13px;'
+            )
+        return label
+
     # ─── UI 설정 ──────────────────────────────────────────────────────────────
 
     def _setup_ui(self):
@@ -445,9 +468,7 @@ class CalibrationPanel(QWidget):
             '완료되면 "캘리브레이션 시작"을 클릭합니다. 클릭 순간의 위치가 기준점으로 기록됩니다.',
         ))
 
-        layout.addWidget(
-            self._make_image_label('center.jpg', '📷  참고 사진 준비 중\n로봇 팔 중앙 위치 모습', height=200)
-        )
+        layout.addWidget(self._make_gif_player('0.gif', height=360))
 
         layout.addStretch()
 
@@ -478,11 +499,7 @@ class CalibrationPanel(QWidget):
             '슬라이더의 녹색 구간이 자동으로 넓어집니다. 완료되면 저장 버튼을 클릭하세요.',
         ))
 
-        layout.addWidget(
-            self._make_image_label('explore.jpg', '📷  참고 사진 준비 중\n관절을 끝까지 돌리는 모습', height=100)
-        )
-
-        # 3열 그리드 — 스크롤 없이 한 화면에 표시
+        # 3열 그리드 — GIF + 슬라이더 6개 동시 표시
         grid_widget = QWidget()
         grid_widget.setStyleSheet('background: transparent;')
         grid_layout = QGridLayout(grid_widget)
@@ -490,10 +507,20 @@ class CalibrationPanel(QWidget):
         grid_layout.setContentsMargins(0, 4, 0, 4)
 
         for i, name in enumerate(JOINT_NAMES):
+            cell = QWidget()
+            cell.setStyleSheet('background: transparent;')
+            cell_layout = QVBoxLayout(cell)
+            cell_layout.setContentsMargins(0, 0, 0, 0)
+            cell_layout.setSpacing(4)
+
+            cell_layout.addWidget(self._make_gif_player(f'{i + 1}.gif', height=140))
+
             slider = JointRangeSlider(name)
             self._sliders[name] = slider
+            cell_layout.addWidget(slider)
+
             row, col = divmod(i, 3)
-            grid_layout.addWidget(slider, row, col)
+            grid_layout.addWidget(cell, row, col)
 
         grid_card = QFrame()
         grid_card.setStyleSheet(f"""
