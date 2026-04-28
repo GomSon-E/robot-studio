@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QProgressBar,
-    QDialog, QFrame, QGridLayout, QScrollArea,
+    QDialog, QFrame, QGridLayout, QScrollArea, QGraphicsDropShadowEffect,
 )
 from PySide6.QtCore import Qt, Signal, QObject
 from PySide6.QtGui import QImage, QPixmap, QPainter, QFont, QColor
@@ -138,7 +138,17 @@ class _PostProcessDialog(QDialog):
         )
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.setFixedSize(400, 140)
-        self.setStyleSheet(f"background-color: white; color: {TEXT_H1};")
+        self.setStyleSheet(f"""
+            QDialog {{
+                background-color: white;
+                border-radius: {RADIUS_LG};
+            }}
+        """)
+        _shadow = QGraphicsDropShadowEffect(self)
+        _shadow.setBlurRadius(32)
+        _shadow.setOffset(0, 8)
+        _shadow.setColor(QColor(124, 58, 237, 38))
+        self.setGraphicsEffect(_shadow)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(24, 20, 24, 20)
