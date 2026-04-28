@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
     QDialog, QFrame, QGridLayout, QScrollArea, QGraphicsDropShadowEffect,
 )
 from PySide6.QtCore import Qt, Signal, QObject
-from PySide6.QtGui import QImage, QPixmap, QPainter, QFont, QColor
+from PySide6.QtGui import QImage, QPixmap, QPainter, QFont, QColor, QRadialGradient
 from rclpy.logging import get_logger
 from sensor_msgs.msg import Image, JointState
 
@@ -204,11 +204,14 @@ class _CountdownOverlay(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        painter.fillRect(self.rect(), QColor(0, 0, 0, 140))
+        painter.fillRect(self.rect(), QColor(*OVERLAY_BG))
 
         cx, cy = self.width() // 2, self.height() // 2
         r = 90
-        painter.setBrush(QColor(220, 38, 38, 230))
+        gradient = QRadialGradient(cx, cy, r)
+        gradient.setColorAt(0.0, QColor(167, 139, 250, 230))   # #a78bfa (light purple)
+        gradient.setColorAt(1.0, QColor(124,  58, 237, 230))   # #7c3aed (ACCENT)
+        painter.setBrush(gradient)
         painter.setPen(Qt.PenStyle.NoPen)
         painter.drawEllipse(cx - r, cy - r, r * 2, r * 2)
 
