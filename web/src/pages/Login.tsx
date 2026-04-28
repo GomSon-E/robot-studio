@@ -1,14 +1,17 @@
 import { useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { login } from "../api/auth";
 import logo from "../assets/logo.png";
 import "./Auth.css";
 
 export default function Login() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
+  const fromRobot = searchParams.get("from") === "robot";
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -16,8 +19,7 @@ export default function Login() {
       const { access_token, refresh_token } = await login(email, password);
       localStorage.setItem("access_token", access_token);
       localStorage.setItem("refresh_token", refresh_token);
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("from") === "robot") {
+      if (fromRobot) {
         const res = await fetch("/api/v1/auth/issue-code", {
           method: "POST",
           headers: { Authorization: `Bearer ${access_token}` },
@@ -69,7 +71,10 @@ export default function Login() {
           </button>
         </form>
         <div className="auth-footer">
-          계정이 없으신가요? <Link to="/signup">회원가입</Link>
+          계정이 없으신가요?{" "}
+          <Link to={fromRobot ? "/signup?from=robot" : "/signup"}>
+            회원가입
+          </Link>
         </div>
       </div>
     </div>

@@ -1,11 +1,13 @@
 import { useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { signup } from "../api/auth";
 import logo from "../assets/logo.png";
 import "./Auth.css";
 
 export default function Signup() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const fromRobot = searchParams.get("from") === "robot";
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,7 +22,7 @@ export default function Signup() {
     }
     try {
       await signup(name, email, password);
-      navigate("/login");
+      navigate(fromRobot ? "/login?from=robot" : "/login");
     } catch (err) {
       setError(err instanceof Error ? err.message : "회원가입에 실패했습니다");
     }
@@ -85,7 +87,8 @@ export default function Signup() {
           </button>
         </form>
         <div className="auth-footer">
-          이미 계정이 있으신가요? <Link to="/login">로그인</Link>
+          이미 계정이 있으신가요?{" "}
+          <Link to={fromRobot ? "/login?from=robot" : "/login"}>로그인</Link>
         </div>
       </div>
     </div>
