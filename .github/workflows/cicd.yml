@@ -45,3 +45,10 @@ jobs:
           context: ./web
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ env.IMAGE_PREFIX }}/robot-studio-web:latest
+
+      - name: Build robot app image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./robot
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ env.IMAGE_PREFIX }}/robot-studio-app:latest
