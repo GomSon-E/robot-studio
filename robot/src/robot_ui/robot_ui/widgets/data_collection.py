@@ -21,6 +21,7 @@ from .theme import (
     GLASS_BG, GLASS_BORDER, RADIUS_LG, RADIUS_MD,
     TEXT_H1, TEXT_BODY, TEXT_MUTED, TEXT_DISABLED,
     ACCENT, ACCENT_GREEN, ACCENT_GREEN_END, ACCENT_RED,
+    PURPLE_TINT, PURPLE_TINT_BORDER, OVERLAY_BG,
     btn_danger, btn_success, progressbar_style,
 )
 
@@ -66,8 +67,8 @@ class _CameraWidget(QFrame):
         self._image_label = QLabel()
         self._image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._image_label.setStyleSheet(
-            "background-color: rgba(196,181,253,0.15); border-radius: 6px;"
-            f" color: {TEXT_DISABLED}; border: 1px solid rgba(196,181,253,0.25);"
+            f"background-color: {PURPLE_TINT}; border-radius: 6px;"
+            f" color: {TEXT_DISABLED}; border: 1px solid {PURPLE_TINT_BORDER};"
         )
         self._image_label.setText('대기 중...')
         layout.addWidget(self._image_label, 1)
