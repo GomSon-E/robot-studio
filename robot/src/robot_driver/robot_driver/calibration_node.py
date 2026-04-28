@@ -1,4 +1,5 @@
 import json
+import threading
 from pathlib import Path
 
 import rclpy
@@ -52,6 +53,7 @@ class CalibrationNode(Node):
         self._connected = False
         self._arm_role = "follower"  # 'follower' or 'leader'
         self._port = "/dev/ttyACM1"
+        self._command_lock = threading.Lock()
 
         self._calibration_status = "idle"
         self._tracked_mins: dict[str, int] = {}
@@ -266,15 +268,27 @@ class CalibrationNode(Node):
             args = arg.split()
             port = args[0] if args else "/dev/ttyACM1"
             arm_role = args[1] if len(args) > 1 else "follower"
-            self.connect(port, arm_role)
+            self._dispatch(self.connect, port, arm_role)
         elif cmd == "disconnect":
-            self.disconnect()
+            self._dispatch(self.disconnect)
         elif cmd == "start":
-            self.start_calibration()
+            self._dispatch(self.start_calibration)
         elif cmd == "save":
-            self.save_calibration()
+            self._dispatch(self.save_calibration)
         elif cmd == "load":
-            self.load_calibration()
+            self._dispatch(self.load_calibration)
+
+    def _dispatch(self, fn, *args):
+        threading.Thread(target=self._run_command, args=(fn, *args), daemon=True).start()
+
+    def _run_command(self, fn, *args):
+        if not self._command_lock.acquire(blocking=False):
+            self.get_logger().warn(f"Command already in progress, ignoring {fn.__name__}")
+            return
+        try:
+            fn(*args)
+        finally:
+            self._command_lock.release()
 
     def _publish_status(self, status: str, message: str, data: dict):
         payload = json.dumps({"status": status, "message": message, "data": data})
