@@ -1,4 +1,5 @@
 import asyncio
+import functools
 import subprocess
 import tempfile
 import time
@@ -136,6 +137,7 @@ class RecordingService:
 # MultiCameraRecordingService
 # ---------------------------------------------------------------------------
 
+@functools.lru_cache(maxsize=None)
 def _check_av1_support() -> bool:
     result = subprocess.run(["ffmpeg", "-encoders"], capture_output=True, text=True)
     return "libsvtav1" in result.stdout
