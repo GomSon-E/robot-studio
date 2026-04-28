@@ -88,6 +88,9 @@ class JointRangeSlider(QWidget):
     빨간색 전체 바, 녹색 활성 구간(자동 추적), 노란색 현재 위치 tick.
     """
 
+    _font_label = QFont('monospace', 9)
+    _font_name = QFont('sans-serif', 11, QFont.Weight.Bold)
+
     def __init__(self, joint_name: str, parent=None):
         super().__init__(parent)
         self.joint_name = joint_name
@@ -100,13 +103,19 @@ class JointRangeSlider(QWidget):
         self.setFixedHeight(80)
 
     def set_range(self, min_val: int, max_val: int, pos_val: int):
-        self.min_v = max(0, min(RESOLUTION - 1, min_val))
-        self.max_v = max(0, min(RESOLUTION - 1, max_val))
-        self.pos_v = max(0, min(RESOLUTION - 1, pos_val))
+        new_min = max(0, min(RESOLUTION - 1, min_val))
+        new_max = max(0, min(RESOLUTION - 1, max_val))
+        new_pos = max(0, min(RESOLUTION - 1, pos_val))
+        if new_min == self.min_v and new_max == self.max_v and new_pos == self.pos_v:
+            return
+        self.min_v, self.max_v, self.pos_v = new_min, new_max, new_pos
         self.update()
 
     def set_tick(self, tick: int):
-        self.tick_v = max(0, min(RESOLUTION - 1, tick))
+        new_tick = max(0, min(RESOLUTION - 1, tick))
+        if new_tick == self.tick_v:
+            return
+        self.tick_v = new_tick
         self.update()
 
     def paintEvent(self, event):
@@ -158,8 +167,7 @@ class JointRangeSlider(QWidget):
 
         # 숫자 라벨
         painter.setPen(QColor(100, 116, 139))
-        font = QFont('monospace', 9)
-        painter.setFont(font)
+        painter.setFont(self._font_label)
         painter.drawText(int(val_to_x(self.min_v)) - 15, bar_y - 30, 30, 12,
                          Qt.AlignmentFlag.AlignCenter, str(self.min_v))
         painter.drawText(int(val_to_x(self.max_v)) - 15, bar_y - 30, 30, 12,
@@ -169,7 +177,7 @@ class JointRangeSlider(QWidget):
 
         # 관절 이름
         painter.setPen(QColor(26, 29, 46))
-        painter.setFont(QFont('sans-serif', 11, QFont.Weight.Bold))
+        painter.setFont(self._font_name)
         painter.drawText(8, 6, w - 16, 18, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
                          self.joint_name)
 
