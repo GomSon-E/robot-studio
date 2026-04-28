@@ -4,7 +4,10 @@ from PySide6.QtCore import Signal, QObject
 
 from rclpy.node import Node
 from sensor_msgs.msg import Image
-from cv_bridge import CvBridge
+try:
+    from cv_bridge import CvBridge
+except Exception:
+    CvBridge = None
 
 
 class ImageSignal(QObject):

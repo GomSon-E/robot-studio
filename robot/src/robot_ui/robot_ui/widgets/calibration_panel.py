@@ -4,7 +4,7 @@ from pathlib import Path
 import serial.tools.list_ports
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QGroupBox, QComboBox, QGridLayout, QFrame, QStackedWidget, QMessageBox,
+    QComboBox, QGridLayout, QFrame, QStackedWidget, QMessageBox,
 )
 from PySide6.QtCore import Qt, Signal, QObject, QPoint
 from PySide6.QtGui import QPainter, QColor, QPen, QFont, QPolygon, QPixmap
@@ -33,6 +33,13 @@ _BTN_PRIMARY = btn_primary()
 _BTN_GREEN   = btn_success()
 _BTN_GHOST   = btn_ghost()
 _BTN_BACK    = btn_back()
+
+_LED_STYLE = {
+    'idle':        f'color: {TEXT_DISABLED};',
+    'connecting':  'color: #ca8a04;',
+    'connected':   f'color: {ACCENT_GREEN};',
+    'disconnected': f'color: {ACCENT_RED};',
+}
 
 
 # ─── ROS2 → Qt 시그널 ────────────────────────────────────────────────────────
@@ -187,8 +194,9 @@ class JointRangeSlider(QWidget):
 # ─── 메인 패널 ───────────────────────────────────────────────────────────────
 
 class CalibrationPanel(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, preview: bool = False):
         super().__init__(parent)
+        self._preview = preview
         self._ui_node: CalibrationUINode | None = None
         self._executor: MultiThreadedExecutor | None = None
         self._ros_thread: threading.Thread | None = None
@@ -269,18 +277,13 @@ class CalibrationPanel(QWidget):
     def _setup_ui(self):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(20, 20, 20, 20)
-        main_layout.setSpacing(12)
+        main_layout.setSpacing(6)
 
         title = QLabel('Robot Calibration')
         title.setStyleSheet(f'color: {TEXT_H1}; font-size: 22px; font-weight: 700; background: transparent;')
         main_layout.addWidget(title)
 
         main_layout.addWidget(self._build_step_indicator())
-
-        self._status_bar = QLabel('')
-        self._status_bar.setStyleSheet(f'color: {TEXT_MUTED}; font-size: 12px; padding: 2px 4px; background: transparent;')
-        self._status_bar.setWordWrap(True)
-        main_layout.addWidget(self._status_bar)
 
         self._stacked = QStackedWidget()
         self._stacked.addWidget(self._build_page_connect())   # 0
@@ -357,64 +360,83 @@ class CalibrationPanel(QWidget):
     def _build_page_connect(self) -> QWidget:
         page = QWidget()
         layout = QVBoxLayout(page)
-        layout.setSpacing(16)
-        layout.setContentsMargins(0, 8, 0, 8)
+        layout.setSpacing(12)
+        layout.setContentsMargins(0, 0, 0, 8)
 
         layout.addWidget(self._make_instruction_card(
             '로봇을 연결하세요',
             '시리얼 포트를 선택하고 Connect를 클릭하세요.',
         ))
 
-        conn_group = QGroupBox('Connection')
-        conn_group.setStyleSheet(f"""
-            QGroupBox {{
-                color: {TEXT_MUTED}; font-size: 11px; font-weight: 600;
-                letter-spacing: 0.5px;
+        conn_card = QFrame()
+        conn_card.setStyleSheet(f"""
+            QFrame {{
                 background-color: {GLASS_BG};
-                border: 1px solid {GLASS_BORDER}; border-radius: {RADIUS_LG};
-                margin-top: 14px; padding-top: 0px;
-            }}
-            QGroupBox::title {{
-                subcontrol-origin: margin; left: 12px; padding: 0 4px;
+                border: none;
+                border-radius: {RADIUS_LG};
             }}
         """)
-        conn_layout = QHBoxLayout(conn_group)
-        conn_layout.setSpacing(8)
-        conn_layout.setContentsMargins(12, 16, 12, 14)
+        conn_card_layout = QVBoxLayout(conn_card)
+        conn_card_layout.setContentsMargins(12, 12, 12, 12)
+        conn_card_layout.setSpacing(0)
+
+        conn_label = QLabel('연결 설정')
+        conn_label.setStyleSheet(
+            f'color: {TEXT_MUTED}; font-size: 13px; font-weight: 600; background: transparent;'
+        )
+        conn_card_layout.addWidget(conn_label)
+        conn_card_layout.addSpacing(8)
+
+        # ArmConnectionWidget 스타일 내부 위젯
+        inner = QFrame()
+        inner.setStyleSheet("QFrame { background-color: transparent; border: none; }")
+        inner_layout = QVBoxLayout(inner)
+        inner_layout.setContentsMargins(12, 12, 12, 12)
+        inner_layout.setSpacing(8)
+
+        self._role_combo = QComboBox()
+        self._role_combo.addItems(['팔로워암', '리더암'])
+        self._role_combo.setFixedWidth(100)
+        self._role_combo.setStyleSheet(combobox_style())
+
+        row = QHBoxLayout()
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(8)
+
+        self._conn_led = QLabel('●')
+        self._conn_led.setStyleSheet(_LED_STYLE['idle'])
+        self._conn_led.setFixedWidth(20)
+        row.addWidget(self._conn_led)
+
+        self._conn_status_lbl = QLabel('대기')
+        self._conn_status_lbl.setStyleSheet(
+            f'color: {TEXT_MUTED}; font-size: 13px; background: transparent;'
+        )
+        self._conn_status_lbl.setFixedWidth(80)
+        row.addWidget(self._conn_status_lbl)
 
         self._port_combo = QComboBox()
-        self._port_combo.setMinimumWidth(160)
         self._port_combo.setStyleSheet(combobox_style())
-
-        port_lbl = QLabel('Port:')
-        port_lbl.setStyleSheet(f'color: {TEXT_MUTED}; font-size: 13px; background: transparent; border: none;')
-        conn_layout.addWidget(port_lbl)
-        conn_layout.addWidget(self._port_combo)
+        row.addWidget(self._port_combo, 1)
 
         refresh_btn = QPushButton('↺')
         refresh_btn.setFixedSize(30, 30)
+        refresh_btn.setToolTip('포트 목록 새로고침')
         refresh_btn.setStyleSheet(btn_icon_sm())
         refresh_btn.clicked.connect(self._refresh_ports)
-        conn_layout.addWidget(refresh_btn)
+        row.addWidget(refresh_btn)
 
-        arm_lbl = QLabel('Arm:')
-        arm_lbl.setStyleSheet(f'color: {TEXT_MUTED}; font-size: 12px; background: transparent; border: none;')
-        conn_layout.addWidget(arm_lbl)
+        row.addWidget(self._role_combo)
 
-        self._role_combo = QComboBox()
-        self._role_combo.addItems(['follower', 'leader'])
-        self._role_combo.setFixedWidth(100)
-        self._role_combo.setStyleSheet(combobox_style())
-        conn_layout.addWidget(self._role_combo)
-
-        self._connect_btn = QPushButton('Connect')
-        self._connect_btn.setFixedHeight(34)
+        self._connect_btn = QPushButton('연결')
+        self._connect_btn.setFixedHeight(30)
         self._connect_btn.setStyleSheet(_BTN_PRIMARY)
         self._connect_btn.clicked.connect(self._on_connect)
-        conn_layout.addWidget(self._connect_btn)
+        row.addWidget(self._connect_btn)
 
-        conn_layout.addStretch()
-        layout.addWidget(conn_group)
+        inner_layout.addLayout(row)
+        conn_card_layout.addWidget(inner)
+        layout.addWidget(conn_card)
         layout.addStretch()
 
         return page
@@ -423,7 +445,7 @@ class CalibrationPanel(QWidget):
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setSpacing(12)
-        layout.setContentsMargins(0, 8, 0, 8)
+        layout.setContentsMargins(0, 0, 0, 8)
 
         layout.addWidget(self._make_instruction_card(
             '모든 관절을 중앙 위치로 맞춰주세요',
@@ -456,7 +478,7 @@ class CalibrationPanel(QWidget):
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setSpacing(8)
-        layout.setContentsMargins(0, 8, 0, 8)
+        layout.setContentsMargins(0, 0, 0, 8)
 
         layout.addWidget(self._make_instruction_card(
             '각 관절을 끝까지 당기고 밀어주세요',
@@ -540,14 +562,24 @@ class CalibrationPanel(QWidget):
             self._port_combo.addItem('No ports', '')
 
     def _on_connect(self):
+        if self._preview:
+            self._go_to_step(1)
+            return
         port = self._port_combo.currentData()
         if not port:
             return
-        arm_role = self._role_combo.currentText()
+        self._conn_led.setStyleSheet(_LED_STYLE['connecting'])
+        self._conn_status_lbl.setText('연결 중...')
+        self._connect_btn.setEnabled(False)
+        self._port_combo.setEnabled(False)
+        arm_role = 'follower' if self._role_combo.currentText() == '팔로워암' else 'leader'
         if self._ui_node:
             self._ui_node.send_command(f'connect {port} {arm_role}')
 
     def _on_start(self):
+        if self._preview:
+            self._go_to_step(2)
+            return
         if self._ui_node:
             self._ui_node.send_command('start')
 
@@ -583,32 +615,23 @@ class CalibrationPanel(QWidget):
     def _on_status(self, status: str, message: str, data: dict):
         self._cal_status = status
 
-        if status == 'error':
-            self._status_bar.setStyleSheet(
-                f'color: {ACCENT_RED}; font-size: 12px; padding: 2px 4px; background: transparent;'
-            )
-            self._status_bar.setText(message)
-            return
-
-        self._status_bar.setStyleSheet(
-            f'color: {TEXT_MUTED}; font-size: 12px; padding: 2px 4px; background: transparent;'
-        )
-        self._status_bar.setText(message)
-
         if status == 'connected':
             self._connected = True
+            self._conn_led.setStyleSheet(_LED_STYLE['connected'])
+            self._conn_status_lbl.setText('연결됨')
             self._go_to_step(1)
         elif status == 'idle':
             self._connected = False
+            self._conn_led.setStyleSheet(_LED_STYLE['idle'])
+            self._conn_status_lbl.setText('대기')
+            self._connect_btn.setEnabled(True)
+            self._port_combo.setEnabled(True)
             self._go_to_step(0)
         elif status == 'homing_set':
             for slider in self._sliders.values():
                 slider.set_range(HALF_TURN, HALF_TURN, HALF_TURN)
             self._go_to_step(2)
         elif status == 'saved':
-            self._status_bar.setStyleSheet(
-                f'color: {ACCENT_GREEN}; font-size: 12px; padding: 2px 4px; background: transparent;'
-            )
             file_path = data.get('file_path', '')
             dlg = QMessageBox(self)
             dlg.setWindowTitle('캘리브레이션 저장 완료')

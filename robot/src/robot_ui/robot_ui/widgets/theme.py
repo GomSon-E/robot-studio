@@ -142,7 +142,7 @@ def btn_primary(height: str = '') -> str:
             background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
                 stop:0 {ACCENT}, stop:1 #a78bfa);
             color: white; border: none; border-radius: {RADIUS_MD};
-            padding: 10px 20px; font-weight: 600; font-size: 12px; {h}
+            padding: 6px 14px; font-weight: 600; font-size: 13px; {h}
         }}
         QPushButton:hover {{
             background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
@@ -159,7 +159,7 @@ def btn_success(height: str = '') -> str:
             background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
                 stop:0 {ACCENT_GREEN}, stop:1 {ACCENT_GREEN_END});
             color: white; border: none; border-radius: {RADIUS_MD};
-            padding: 10px 20px; font-weight: 600; font-size: 12px; {h}
+            padding: 6px 14px; font-weight: 600; font-size: 13px; {h}
         }}
         QPushButton:hover {{
             background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
@@ -176,7 +176,7 @@ def btn_danger(height: str = '') -> str:
             background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
                 stop:0 {ACCENT_RED}, stop:1 {ACCENT_RED_END});
             color: white; border: none; border-radius: {RADIUS_MD};
-            padding: 10px 20px; font-weight: 700; font-size: 12px; {h}
+            padding: 6px 14px; font-weight: 700; font-size: 13px; {h}
         }}
         QPushButton:hover {{
             background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
@@ -193,7 +193,7 @@ def btn_warning(height: str = '') -> str:
             background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
                 stop:0 #d97706, stop:1 #f59e0b);
             color: white; border: none; border-radius: {RADIUS_MD};
-            padding: 10px 20px; font-weight: 600; font-size: 12px; {h}
+            padding: 6px 14px; font-weight: 600; font-size: 13px; {h}
         }}
         QPushButton:hover {{
             background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
@@ -208,7 +208,7 @@ def btn_ghost() -> str:
         QPushButton {{
             background-color: {GLASS_BG}; color: {TEXT_BODY};
             border: 1px solid {GLASS_BORDER}; border-radius: {RADIUS_MD};
-            padding: 10px 20px; font-size: 14px;
+            padding: 6px 14px; font-size: 13px;
         }}
         QPushButton:hover {{ background-color: {GLASS_BG_LT}; }}
     """

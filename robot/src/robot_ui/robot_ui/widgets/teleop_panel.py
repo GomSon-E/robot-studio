@@ -14,9 +14,12 @@ from rclpy.parameter import Parameter
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Bool, String
 
-from robot_driver.leader_arm_node import LeaderArmNode
-from robot_driver.follower_arm_node import FollowerArmNode
-from robot_driver.teleop_node import TeleopNode
+try:
+    from robot_driver.leader_arm_node import LeaderArmNode
+    from robot_driver.follower_arm_node import FollowerArmNode
+    from robot_driver.teleop_node import TeleopNode
+except ImportError:
+    LeaderArmNode = FollowerArmNode = TeleopNode = None
 
 from .theme import (
     GLASS_BG, GLASS_BORDER, RADIUS_LG,

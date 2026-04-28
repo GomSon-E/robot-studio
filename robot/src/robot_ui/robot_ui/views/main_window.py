@@ -10,9 +10,10 @@ logger = get_logger('MainWindow')
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, preview: bool = False):
         super().__init__()
-        self.setWindowTitle('Robot Studio')
+        self._preview = preview
+        self.setWindowTitle('Robot Studio [PREVIEW]' if preview else 'Robot Studio')
         self.setMinimumSize(1200, 800)
 
         self.setStyleSheet(f"""
@@ -39,10 +40,11 @@ class MainWindow(QMainWindow):
         self.stacked_widget = QStackedWidget()
         root_layout.addWidget(self.stacked_widget)
 
-        # 페이지 0: 로그인
-        self.login_webview = LoginWebView()
-        self.login_webview.login_success.connect(self._on_login_success)
-        self.stacked_widget.addWidget(self.login_webview)  # index 0
+        # 페이지 0: 로그인 (preview 모드에서는 WebEngine 생성 생략)
+        if not self._preview:
+            self.login_webview = LoginWebView()
+            self.login_webview.login_success.connect(self._on_login_success)
+            self.stacked_widget.addWidget(self.login_webview)  # index 0
 
         # 페이지 1: 메인
         main_page = QWidget()
@@ -57,7 +59,7 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(self.sidebar)
 
         # 2. 캘리브레이션 패널
-        self.calibration_panel = CalibrationPanel()
+        self.calibration_panel = CalibrationPanel(preview=self._preview)
         self.calibration_panel.setVisible(False)
         main_layout.addWidget(self.calibration_panel, 1)
 
@@ -96,7 +98,8 @@ class MainWindow(QMainWindow):
             list(self.camera_preview_area.preview_widgets.keys())
         )
 
-        self.stacked_widget.addWidget(main_page)  # index 1
+        self.stacked_widget.addWidget(main_page)  # preview: index 0, normal: index 1
+
         self.stacked_widget.setCurrentIndex(0)
 
         # 기본 패널: Calibration
